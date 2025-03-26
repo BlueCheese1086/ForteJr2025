@@ -17,16 +17,8 @@ import frc.robot.Constants.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
     // Motors
-    private SparkMax launchMotor;
-    private SparkMax feedMotor;
-
-    // Encoders
-    private RelativeEncoder launchEncoder;
-    private RelativeEncoder feedEncoder;
-
-    // PID Controllers
-    private SparkClosedLoopController launchPID;
-    private SparkClosedLoopController feedPID;
+    private SparkMax launch;
+    private SparkMax feed;
 
     // Logged Vars
     private double expectedFeedSpeed;
@@ -43,73 +35,52 @@ public class Shooter extends SubsystemBase {
 
     public Shooter() {
         // Getting motors
-        launchMotor = new SparkMax(ShooterConstants.launchID, MotorType.kBrushless);
-        feedMotor = new SparkMax(ShooterConstants.feedID, MotorType.kBrushless);
+        // Switching IDs temporarily
+        launch = new SparkMax(ShooterConstants.feedID, MotorType.kBrushless);
+        feed = new SparkMax(ShooterConstants.launchID, MotorType.kBrushless);
 
         // Initializing the config object
         SparkMaxConfig config = new SparkMaxConfig();
 
         // Adding configs
-        config.idleMode(IdleMode.kCoast);
+        config.idleMode(IdleMode.kBrake);
         config.inverted(true);
 
-        // Applying launch PIDs
-        config.closedLoop.p(ShooterConstants.launchP);
-        config.closedLoop.i(ShooterConstants.launchI);
-        config.closedLoop.d(ShooterConstants.launchD);
-        config.closedLoop.velocityFF(ShooterConstants.launchFF);
-
         // Configuring launch motor
-        launchMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        // Applying feed PIDs
-        config.closedLoop.p(ShooterConstants.feedP);
-        config.closedLoop.i(ShooterConstants.feedI);
-        config.closedLoop.d(ShooterConstants.feedD);
-        config.closedLoop.velocityFF(ShooterConstants.feedFF);
+        launch.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // Configuring feed motor
-        feedMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        // Getting the encoders
-        launchEncoder = launchMotor.getEncoder();
-        feedEncoder = feedMotor.getEncoder();
-
-        // Getting the PID controllers
-        launchPID = launchMotor.getClosedLoopController();
-        feedPID = feedMotor.getClosedLoopController();
+        feed.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     /** This function runs every tick that the class has been initialized. */
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("/Shooter/Real_Feed_RPM", getFeedSpeed());
-        SmartDashboard.putNumber("/Shooter/Expected_Feed_RPM", expectedFeedSpeed);
-        SmartDashboard.putNumber("/Shooter/Real_Launch_RPM", getLaunchSpeed());
-        SmartDashboard.putNumber("/Shooter/Expected_Launch_RPM", expectedLaunchSpeed);
+        SmartDashboard.putNumber("/Shooter/Real_Feed_Speed", feed.get());
+        SmartDashboard.putNumber("/Shooter/Expected_Feed_Speed", expectedFeedSpeed);
+        SmartDashboard.putNumber("/Shooter/Real_Launch_Speed", launch.get());
+        SmartDashboard.putNumber("/Shooter/Expected_Launch_Speed", expectedLaunchSpeed);
     }
 
     /** Gets the speed of the feed wheel. */
     public double getFeedSpeed() {
-        return feedEncoder.getVelocity();
+        return feed.get();
     }
 
     /** Gets the speed of the launch wheel. */
     public double getLaunchSpeed() {
-        return launchEncoder.getVelocity();
+        return launch.get();
     }
 
     /** Sets the speed of the feed wheel. */
     public void setFeedSpeed(double speed) {
-        expectedFeedSpeed = speed * ShooterConstants.maxFeedSpeed.in(Rotations.per(Minute));
-        
-        feedPID.setReference(expectedFeedSpeed, ControlType.kVelocity);
+        expectedFeedSpeed = speed;
+        feed.set(speed);
     }
 
     /** Sets the speed of the launch wheel. */
     public void setLaunchSpeed(double speed) {
-        expectedLaunchSpeed = speed * ShooterConstants.maxLaunchSpeed.in(Rotations.per(Minute));
-        
-        launchPID.setReference(expectedLaunchSpeed, ControlType.kVelocity);
+        expectedLaunchSpeed = speed;
+        launch.set(speed);
     }
 }
