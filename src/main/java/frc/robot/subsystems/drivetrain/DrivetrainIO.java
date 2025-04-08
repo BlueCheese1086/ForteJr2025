@@ -1,4 +1,4 @@
-package frc.robot.Drivetrain;
+package frc.robot.subsystems.drivetrain;
 
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;

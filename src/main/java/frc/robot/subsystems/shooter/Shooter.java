@@ -1,19 +1,12 @@
-package frc.robot.Shooter;
+package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.*;
-
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
     // Motors
@@ -24,21 +17,7 @@ public class Shooter extends SubsystemBase {
     private double expectedFeedSpeed;
     private double expectedLaunchSpeed;
 
-    // A common instance of the shooter class so that I don't have to outright initialize it anywhere.
-    private static Shooter instance;
-
-    public static Shooter getInstance() {
-        if (instance == null) instance = new Shooter();
-
-        return instance;
-    }
-
-    public Shooter() {
-        // Getting motors
-        // Switching IDs temporarily
-        launch = new SparkMax(ShooterConstants.feedID, MotorType.kBrushless);
-        feed = new SparkMax(ShooterConstants.launchID, MotorType.kBrushless);
-
+    public Shooter(ShooterIO io) {
         // Initializing the config object
         SparkMaxConfig config = new SparkMaxConfig();
 

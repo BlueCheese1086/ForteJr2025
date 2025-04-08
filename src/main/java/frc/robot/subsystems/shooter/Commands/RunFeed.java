@@ -1,14 +1,14 @@
-package frc.robot.Shooter.Commands;
+package frc.robot.subsystems.shooter.Commands;
 
-import frc.robot.Shooter.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.shooter.Shooter;
 
 public class RunFeed extends Command {
     private Shooter shooter;
     private double speed;
 
-    public RunFeed(double speed) {
-        this.shooter = Shooter.getInstance();
+    public RunFeed(Shooter shooter, double speed) {
+        this.shooter = shooter;
         this.speed = speed;
     }
 

@@ -1,4 +1,4 @@
-package frc.robot.Drivetrain.Commands;
+package frc.robot.subsystems.drivetrain.Commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
@@ -8,7 +8,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ControllerConstants;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Drivetrain.Drivetrain;
+import frc.robot.subsystems.drivetrain.Drivetrain;
+
 import java.util.function.Supplier;
 
 /** A command that drives a {@link Drivetrain} using closed loop control. */
@@ -25,8 +26,8 @@ public class ClosedLoopDrive extends Command {
      * @param xSpeedSupplier The supplier for the x translational speed.
      * @param zRotateSupplier The supplier for the z rotational speed.
      */
-    public ClosedLoopDrive(Supplier<Double> xSpeedSupplier, Supplier<Double> zRotateSupplier) {
-        this.drivetrain = Drivetrain.getInstance();
+    public ClosedLoopDrive(Drivetrain drivetrain, Supplier<Double> xSpeedSupplier, Supplier<Double> zRotateSupplier) {
+        this.drivetrain = drivetrain;
         this.xSpeedSupplier = xSpeedSupplier;
         this.zRotatSupplier = zRotateSupplier;
 

@@ -1,4 +1,4 @@
-package frc.robot.Drivetrain;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -15,6 +15,8 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
+
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainIOSparkMax implements DrivetrainIO {
@@ -28,12 +30,12 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
 
     private DrivetrainIOInputsAutoLogged inputs;
 
-    public DrivetrainIOSparkMax() {
+    public DrivetrainIOSparkMax(int frontLeftID, int frontRightID, int backLeftID, int backRightID) {
         // Initializing the motors
-        flMotor = new SparkMax(DriveConstants.frontLeftID,  MotorType.kBrushless);
-        frMotor = new SparkMax(DriveConstants.frontRightID, MotorType.kBrushless);
-        blMotor = new SparkMax(DriveConstants.backLeftID,   MotorType.kBrushless);
-        brMotor = new SparkMax(DriveConstants.backRightID,  MotorType.kBrushless);
+        flMotor = new SparkMax(frontLeftID,  MotorType.kBrushless);
+        frMotor = new SparkMax(frontRightID, MotorType.kBrushless);
+        blMotor = new SparkMax(backLeftID,   MotorType.kBrushless);
+        brMotor = new SparkMax(backRightID,  MotorType.kBrushless);
 
         // Making the config object
         SparkMaxConfig config = new SparkMaxConfig();

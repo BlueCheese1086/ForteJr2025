@@ -1,4 +1,4 @@
-package frc.robot.Drivetrain;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -15,6 +15,8 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
+
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainIOTalonFX implements DrivetrainIO {
@@ -25,12 +27,12 @@ public class DrivetrainIOTalonFX implements DrivetrainIO {
 
     private DrivetrainIOInputsAutoLogged inputs;
 
-    public DrivetrainIOTalonFX() {
+    public DrivetrainIOTalonFX(int frontLeftID, int frontRightID, int backLeftID, int backRightID) {
         // Initializing the motors
-        flMotor = new TalonFX(DriveConstants.frontLeftID);
-        frMotor = new TalonFX(DriveConstants.frontRightID);
-        blMotor = new TalonFX(DriveConstants.backLeftID);
-        brMotor = new TalonFX(DriveConstants.backRightID);
+        flMotor = new TalonFX(frontLeftID);
+        frMotor = new TalonFX(frontRightID);
+        blMotor = new TalonFX(backLeftID);
+        brMotor = new TalonFX(backRightID);
 
         // Resetting the motors
         // The loops either force the configuration to finish, or prevent the program from continuing.

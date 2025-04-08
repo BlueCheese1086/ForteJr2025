@@ -1,4 +1,4 @@
-package frc.robot.Drivetrain;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotMotor;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotWheelSize;
+import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
+
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainIOSim implements DrivetrainIO {

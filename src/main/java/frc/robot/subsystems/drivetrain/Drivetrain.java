@@ -1,4 +1,4 @@
-package frc.robot.Drivetrain;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -40,18 +40,10 @@ public class Drivetrain extends SubsystemBase {
     private Pose2d initPose = new Pose2d();
     private DifferentialDrivePoseEstimator poseEstimator;
 
-    // A common instance of the shooter class so that I don't have to outright initialize it anywhere.
-    private static Drivetrain instance;
-
-    public static Drivetrain getInstance() {
-        if (instance == null) instance = new Drivetrain();
-
-        return instance;
-    }
-
-    /** Creates a new ExampleSubsystem. */
-    public Drivetrain() {
-        drivetrainIO = new DrivetrainIOSim();
+    /** Creates a new Drivetrain. */
+    public Drivetrain(DrivetrainIO drivetrainIO) {
+        this.drivetrainIO = drivetrainIO;
+        
         // Pushing a warning to SmartDashboard if TalonSRXs are in use
         // They don't have built-in encoders and cannot run closed loop
         if (drivetrainIO instanceof DrivetrainIOTalonSRX) {

@@ -1,4 +1,4 @@
-package frc.robot.Drivetrain;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -12,7 +12,8 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
+
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainIOTalonSRX implements DrivetrainIO {
@@ -27,12 +28,12 @@ public class DrivetrainIOTalonSRX implements DrivetrainIO {
      * TalonSRXs are brushed controllers, and do not have a built-in encoder.
      * This results in robots without external encoders to not know their wheel positions or velocity.
      */
-    public DrivetrainIOTalonSRX() {
+    public DrivetrainIOTalonSRX(int frontLeftID, int frontRightID, int backLeftID, int backRightID) {
         // Initializing the motors
-        flMotor = new TalonSRX(DriveConstants.frontLeftID);
-        frMotor = new TalonSRX(DriveConstants.frontRightID);
-        blMotor = new TalonSRX(DriveConstants.backLeftID);
-        brMotor = new TalonSRX(DriveConstants.backRightID);
+        flMotor = new TalonSRX(frontLeftID);
+        frMotor = new TalonSRX(frontRightID);
+        blMotor = new TalonSRX(backLeftID);
+        brMotor = new TalonSRX(backRightID);
 
         // Resetting each TalonSRX's settings.
         // The loops make sure that the reset is completed.

@@ -1,10 +1,11 @@
-package frc.robot.Drivetrain.Commands;
+package frc.robot.subsystems.drivetrain.Commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ControllerConstants;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Drivetrain.Drivetrain;
+import frc.robot.subsystems.drivetrain.Drivetrain;
+
 import java.util.function.Supplier;
 
 /** A command that drives a {@link Drivetrain} using open loop tank control. */
@@ -22,8 +23,8 @@ public class TankDrive extends Command {
      * @param lSpeedSupplier The supplier for the left speed.
      * @param rSpeedSupplier The supplier for the right speed.
      */
-    public TankDrive(Supplier<Double> lSpeedSupplier, Supplier<Double> rSpeedSupplier) {
-        drivetrain = Drivetrain.getInstance();
+    public TankDrive(Drivetrain drivetrain, Supplier<Double> lSpeedSupplier, Supplier<Double> rSpeedSupplier) {
+        this.drivetrain = drivetrain;
         this.lSpeedSupplier = lSpeedSupplier;
         this.rSpeedSupplier = rSpeedSupplier;
 
