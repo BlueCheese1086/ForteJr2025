@@ -8,47 +8,31 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-/**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
- * project.
- */
 public class Robot extends LoggedRobot {
+    private RobotContainer robotContainer;
     private Command autonomousCommand;
-    private Command teleopCommand;
 
-    /**
-     * This function is run when the robot is first started up and should be used for any
-     * initialization code
-     */
+    /** This function is run when the robot is first started up and should be used for any initialization code. */
     @Override
     public void robotInit() {
-        // Saving the project name
-        Logger.recordMetadata("ProjectName", "ForteJr");
-
         // Adding an NT4Publisher
         Logger.addDataReceiver(new NT4Publisher());
 
-        if (!isSimulation()) {
-            // Adding a WPILOGWriter if running for real.
+        // Adding a WPILOGWriter if running for real.
+        if (isReal()) {
             Logger.addDataReceiver(new WPILOGWriter());
-        } else {
-            // Adding a replay source if running in sim and as a replay
-            if (Constants.isReplay) {
-                Logger.setReplaySource(new WPILOGReader("log.wpilog"));
-            }
+        }
+
+        // Adding a replay source if running in sim and as a replay
+        if (isSimulation() && Constants.isReplay) {
+            Logger.setReplaySource(new WPILOGReader("log.wpilog"));
         }
 
         // Starting the Logger
         Logger.start();
 
         // Instantiate the RobotContainer.  This will assign all our button bindings.
-        RobotContainer robotContainer = RobotContainer.getInstance();
-
-        // Getting the commands for each mode from RobotContainer.
-        autonomousCommand = robotContainer.getAutoCommand();
-        teleopCommand = robotContainer.getTeleopCommand();
+        robotContainer = new RobotContainer();
     }
 
     /**
@@ -85,6 +69,8 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void autonomousInit() {
+        autonomousCommand = robotContainer.getAutoCommand();
+
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
         }
@@ -105,31 +91,17 @@ public class Robot extends LoggedRobot {
         }
     }
 
-    /**
-     * This function is called once each time the robot enters Teleop.
-     * It starts the teleop command selected by your {@link RobotContainer} class.
-     */
+    /** This function is called once each time the robot enters Teleop. */
     @Override
-    public void teleopInit() {
-        if (teleopCommand != null) {
-            teleopCommand.schedule();
-        }
-    }
+    public void teleopInit() {}
 
     /** This function is called periodically during Teleop. */
     @Override
     public void teleopPeriodic() {}
 
-    /**
-     * This function is called once each time the robot exits Teleop.
-     * It stops the teleop command selected by your {@link RobotContainer} class.
-     */
+    /** This function is called once each time the robot exits Teleop. */
     @Override
-    public void teleopExit() {
-        if (teleopCommand != null) {
-            teleopCommand.cancel();
-        }
-    }
+    public void teleopExit() {}
 
     /** This function is called once each time the robot enters Test. */
     @Override

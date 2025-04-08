@@ -12,29 +12,15 @@ import frc.robot.subsystems.drivetrain.Commands.*;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.subsystems.shooter.Commands.*;
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and trigger mappings) should be declared here.
- */
 public class RobotContainer {
     // Replace with CommandPS4Controller or CommandJoystick if needed
-    private final CommandXboxController controller = new CommandXboxController(0);
+    private CommandXboxController controller = new CommandXboxController(0);
 
     // Subsystems
-    private final Drivetrain drivetrain;
-    private final Shooter shooter;
+    private Drivetrain drivetrain;
+    private Shooter shooter;
 
-    private static RobotContainer instance;
-
-    public static RobotContainer getInstance() {
-        if (instance == null) instance = new RobotContainer();
-
-        return instance;
-    }
-
-    /** The container for the robot. Contains subsystems, OI devices, and commands. */
+    /** The container for the robot. Contains subsystems, IO devices, and commands. */
     public RobotContainer() {
         // Initializing subsystems
         if (RobotBase.isReal()) {
@@ -59,6 +45,8 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
+        drivetrain.setDefaultCommand(new ArcadeDrive(drivetrain, controller::getLeftY, controller::getRightX));
+
         controller.a().whileTrue(new RunFeed(shooter, 1));
         controller.b().whileTrue(new RunShooter(shooter, -1)).whileTrue(new RunFeed(shooter, -1));
         controller.y().toggleOnTrue(new RunShooter(shooter, 1));
@@ -71,14 +59,5 @@ public class RobotContainer {
      */
     public Command getAutoCommand() {
         return new PrintCommand("No auto lol");
-    }
-
-    /**
-     * Use this to pass a teleop command to the {@link Robot} class.
-     * 
-     * @return The command to run in Teleop mode.
-     */
-    public Command getTeleopCommand() {
-        return new ArcadeDrive(drivetrain, ()-> controller.getLeftY(), ()-> controller.getRightX());
     }
 }
