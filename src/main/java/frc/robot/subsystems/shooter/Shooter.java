@@ -31,17 +31,17 @@ public class Shooter extends SubsystemBase {
         return inputs.launchPercent;
     }
 
-    /** Sets the speed of the feed wheel. */
+    /** Sets the percent output of the feed wheel. */
     public void setFeedPercent(double speed) {
         Logger.recordOutput("/Shooter/Expected_Feed_Speed", speed);
 
         io.setFeedPercent(speed);
     }
 
-    /** Sets the speed of the launch wheel. */
+    /** Sets the percent output of the launch wheel. */
     public void setLaunchPercent(double speed) {
         Logger.recordOutput("/Shooter/Expected_Launch_Speed", speed);
 
-        io.setFeedPercent(speed);
+        io.setLaunchPercent(speed);
     }
 }

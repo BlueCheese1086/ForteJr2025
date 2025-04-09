@@ -2,9 +2,8 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
-import org.littletonrobotics.junction.Logger;
-
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPLTVController;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
@@ -14,13 +13,16 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
+import org.littletonrobotics.junction.Logger;
 
 public class Drivetrain extends SubsystemBase {
     private DrivetrainIO drivetrainIO;
@@ -52,17 +54,23 @@ public class Drivetrain extends SubsystemBase {
         // Initializing the pose estimator
         poseEstimator = new DifferentialDrivePoseEstimator(kinematics, getAngle(), getLeftPosition().in(Meters), getRightPosition().in(Meters), new Pose2d());
 
-        // Initializing the autobuilder
+        // Configuring Pathplanner
+        // Flips the path if on Red alliance.  Pathplanner builds their paths for Blue alliance.
+        // Defaults to flipped because simulated robots start on the Red alliance.
         AutoBuilder.configure(
-            this::getPose,
-            this::setPose,
-            this::getChassisSpeeds,
-            this::closedLoop,
-            new PPLTVController(0.02),
-            new RobotConfig(DriveConstants.mass, DriveConstants.momentOfInertia, null),
-            () -> (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red),
-            this
-        );
+            this::getPose, 
+            this::setPose, 
+            this::getChassisSpeeds, 
+            this::closedLoop, 
+            new PPLTVController(0.02, DriveConstants.maxClosedDriveSpeed.in(MetersPerSecond)),
+            new RobotConfig(DriveConstants.mass, DriveConstants.momentOfInertia, 
+                new ModuleConfig(DriveConstants.wheelRadius,
+                    DriveConstants.maxClosedDriveSpeed, 1,
+                    DCMotor.getCIM(2),
+                    DriveConstants.gearRatio, DriveConstants.driveCurrentLimit, 2),
+                DriveConstants.robotWidth),
+            () -> (DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red),
+            this);
     }
 
     @Override

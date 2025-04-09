@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
@@ -51,6 +52,10 @@ public final class Constants {
 
         // Conversion factors
         public static final double rotToMeters = wheelCircumference.in(Meters) / gearRatio;
+
+        // Current Limits
+        public static final Current driveCurrentLimit = Amps.of(60);
+        public static final Current steerCurrentLimit = Amps.of(60);
 
         // PIDFF values
         public static final double kP   = 0.0;
