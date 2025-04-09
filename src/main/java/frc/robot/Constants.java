@@ -28,8 +28,8 @@ public final class Constants {
         public static final int DRIVE_BackLeftId = 3;   // CAN (TalonSRX)
         public static final int DRIVE_BackRightId = 4;  // CAN (TalonSRX)
 
-        public static final int SHOOTER_FeedId = 11;   // CAN (SparkMax)
-        public static final int SHOOTER_LaunchId = 12; // CAN (SparkMax)
+        public static final int SHOOTER_LaunchId = 11; // CAN (SparkMax)
+        public static final int SHOOTER_FeedId = 12;   // CAN (SparkMax)
     }
 
     public static class DriveConstants {
