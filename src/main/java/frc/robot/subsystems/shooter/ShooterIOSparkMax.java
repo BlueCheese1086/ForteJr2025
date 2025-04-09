@@ -32,22 +32,19 @@ public class ShooterIOSparkMax implements ShooterIO {
         SparkMaxConfig feedConfig = new SparkMaxConfig();
         feedConfig.idleMode(IdleMode.kBrake);
         feedConfig.inverted(true);
-
         feedConfig.closedLoop.p(ShooterConstants.feedP);
         feedConfig.closedLoop.i(ShooterConstants.feedI);
         feedConfig.closedLoop.d(ShooterConstants.feedD);
         feedConfig.closedLoop.velocityFF(ShooterConstants.feedFF);
+        feedMotor.configure(feedConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkMaxConfig launchConfig = new SparkMaxConfig();
         launchConfig.idleMode(IdleMode.kBrake);
         launchConfig.inverted(true);
-
         launchConfig.closedLoop.p(ShooterConstants.launchP);
         launchConfig.closedLoop.i(ShooterConstants.launchI);
         launchConfig.closedLoop.d(ShooterConstants.launchD);
         launchConfig.closedLoop.velocityFF(ShooterConstants.launchFF);
-
-        feedMotor.configure(feedConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         launchMotor.configure(launchConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         feedEncoder = feedMotor.getEncoder();
