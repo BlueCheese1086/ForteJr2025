@@ -2,19 +2,13 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import edu.wpi.first.units.Units;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
-
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.wpilibj.Alert;
+import frc.robot.Constants.DriveConstants;
 
 public class DrivetrainIOTalonSRX implements DrivetrainIO {
     private TalonSRX flMotor;
@@ -22,7 +16,8 @@ public class DrivetrainIOTalonSRX implements DrivetrainIO {
     private TalonSRX blMotor;
     private TalonSRX brMotor;
 
-    private DrivetrainIOInputsAutoLogged inputs;
+    // Alert for when the user uses closed loop control on the brushed motor controllers.
+    private Alert noClosedLoop = new Alert("TalonSRX unable to use closed loop control.  Rolling back to voltage output.", Alert.AlertType.kWarning);
 
     /**
      * TalonSRXs are brushed controllers, and do not have a built-in encoder.
@@ -36,11 +31,10 @@ public class DrivetrainIOTalonSRX implements DrivetrainIO {
         brMotor = new TalonSRX(backRightID);
 
         // Resetting each TalonSRX's settings.
-        // The loops make sure that the reset is completed.
-        while (flMotor.configFactoryDefault() != ErrorCode.OK) {}
-        while (frMotor.configFactoryDefault() != ErrorCode.OK) {}
-        while (blMotor.configFactoryDefault() != ErrorCode.OK) {}
-        while (brMotor.configFactoryDefault() != ErrorCode.OK) {}
+        flMotor.configFactoryDefault();
+        frMotor.configFactoryDefault();
+        blMotor.configFactoryDefault();
+        brMotor.configFactoryDefault();
 
         // Inverting the motors
         flMotor.setInverted(true);
@@ -57,8 +51,6 @@ public class DrivetrainIOTalonSRX implements DrivetrainIO {
         // Having the back motors follow the front motors.
         blMotor.follow(flMotor);
         brMotor.follow(frMotor);
-
-        inputs = new DrivetrainIOInputsAutoLogged();
     }
 
     /**
@@ -68,87 +60,46 @@ public class DrivetrainIOTalonSRX implements DrivetrainIO {
      * @param inputs An instance of the class that contains the inputs that need to be logged.
      */
     @Override
-    public void updateInputs() {
+    public void updateInputs(DrivetrainIOInputs inputs) {
+        // Updating IOInputs
         // Voltages
-        inputs.leftVoltage = getLeftVoltage();
-        inputs.rightVoltage = getRightVoltage();
-
-        // Positions
-        inputs.leftPosition = getLeftPosition();
-        inputs.rightPosition = getRightPosition();
+        inputs.leftVoltage = Volts.of((flMotor.getMotorOutputVoltage() + blMotor.getMotorOutputVoltage()) / 2.0);
+        inputs.rightVoltage = Volts.of((frMotor.getMotorOutputVoltage() + brMotor.getMotorOutputVoltage()) / 2.0);
 
         // Current
-        inputs.leftCurrent = getLeftCurrent();
-        inputs.rightCurrent = getRightCurrent();
+        inputs.leftCurrent = Amps.of((flMotor.getStatorCurrent() + blMotor.getStatorCurrent()) / 2.0);
+        inputs.rightCurrent = Amps.of((frMotor.getStatorCurrent() + brMotor.getStatorCurrent()) / 2.0);
 
         // Temperature
-        inputs.leftTemperature = getLeftTemperature();
-        inputs.rightTemperature = getRightTemperature();
-
-        // Velocity
-        inputs.leftVelocity = getLeftVelocity();
-        inputs.rightVelocity = getRightVelocity();
-
-        Logger.processInputs("DrivetrainTalonSRXInputs", inputs);
+        inputs.leftTemperature = Celsius.of((flMotor.getTemperature() + blMotor.getTemperature()) / 2.0);
+        inputs.rightTemperature = Celsius.of((frMotor.getTemperature() + brMotor.getTemperature()) / 2.0);
     }
 
     @Override
-    public Current getLeftCurrent() {
-        return Amps.of((flMotor.getStatorCurrent() + blMotor.getStatorCurrent()) / 2.0);
+    public void setLeftVoltage(Voltage volts) {
+        noClosedLoop.set(false);
+
+        flMotor.set(ControlMode.PercentOutput, volts.in(Volts) / flMotor.getBusVoltage());
     }
 
     @Override
-    public Distance getLeftPosition() {
-        return Meters.zero();
+    public void setRightVoltage(Voltage volts) {
+        noClosedLoop.set(false);
+
+        frMotor.set(ControlMode.PercentOutput, volts.in(Volts) / frMotor.getBusVoltage());
     }
 
     @Override
-    public Temperature getLeftTemperature() {
-        return Units.Celsius.of(flMotor.getTemperature());
+    public void setLeftSpeed(LinearVelocity velocity) {
+        noClosedLoop.set(true);
+        
+        flMotor.set(ControlMode.PercentOutput, velocity.div(DriveConstants.maxClosedDriveSpeed).magnitude());
     }
 
     @Override
-    public LinearVelocity getLeftVelocity() {
-        return MetersPerSecond.zero();
-    }
+    public void setRightSpeed(LinearVelocity velocity) {
+        noClosedLoop.set(true);
 
-    @Override
-    public Voltage getLeftVoltage() {
-        return Volts.of(flMotor.getMotorOutputVoltage());
-    }
-
-    @Override
-    public void setLeftVoltage(double volts) {
-        flMotor.set(ControlMode.PercentOutput, volts / flMotor.getBusVoltage());
-    }
-
-    @Override
-    public Current getRightCurrent() {
-        return Amps.of((frMotor.getStatorCurrent() + brMotor.getStatorCurrent()) / 2.0);
-    }
-
-    @Override
-    public Distance getRightPosition() {
-        return Meters.zero();
-    }
-
-    @Override
-    public Temperature getRightTemperature() {
-        return Units.Celsius.of(frMotor.getTemperature());
-    }
-
-    @Override
-    public LinearVelocity getRightVelocity() {
-        return MetersPerSecond.zero();
-    }
-
-    @Override
-    public Voltage getRightVoltage() {
-        return Volts.of(frMotor.getMotorOutputVoltage());
-    }
-
-    @Override
-    public void setRightVoltage(double volts) {
-        frMotor.set(ControlMode.PercentOutput, volts / frMotor.getBusVoltage());
+        frMotor.set(ControlMode.PercentOutput, velocity.div(DriveConstants.maxClosedDriveSpeed).magnitude());
     }
 }

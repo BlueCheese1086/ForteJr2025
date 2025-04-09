@@ -2,31 +2,38 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotMotor;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotWheelSize;
-import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
-
-import org.littletonrobotics.junction.Logger;
+import frc.robot.util.AdjustableValues;
 
 public class DrivetrainIOSim implements DrivetrainIO {
     private DifferentialDrivetrainSim driveSim;
 
-    private DrivetrainIOInputsAutoLogged inputs;
+    private PIDController leftController;
+    private PIDController rightController;
 
     private double leftVolts;
     private double rightVolts;
+
+    private boolean openLoop = true;
     
     public DrivetrainIOSim() {
-        inputs = new DrivetrainIOInputsAutoLogged();
-// 0.366568182
         driveSim = DifferentialDrivetrainSim.createKitbotSim(KitbotMotor.kDoubleNEOPerSide, KitbotGearing.k8p45, KitbotWheelSize.kEightInch, null);
+
+        leftController = new PIDController(
+            AdjustableValues.getNumber("Drive_LeftkP"),
+            AdjustableValues.getNumber("Drive_LeftkI"),
+            AdjustableValues.getNumber("Drive_LeftkD"));
+
+        rightController = new PIDController(
+            AdjustableValues.getNumber("Drive_RightkP"),
+            AdjustableValues.getNumber("Drive_RightkI"),
+            AdjustableValues.getNumber("Drive_RightkD"));
     }
 
     /**
@@ -36,91 +43,70 @@ public class DrivetrainIOSim implements DrivetrainIO {
      * @param inputs An instance of the class that contains the inputs that need to be logged.
      */
     @Override
-    public void updateInputs() {
+    public void updateInputs(DrivetrainIOInputs inputs) {
+        // Checking if PID values have changed
+        if (AdjustableValues.hasChanged("Drive_LeftkP")) leftController.setP(AdjustableValues.getNumber("Drive_LeftkP"));
+        if (AdjustableValues.hasChanged("Drive_LeftkI")) leftController.setI(AdjustableValues.getNumber("Drive_LeftkI"));
+        if (AdjustableValues.hasChanged("Drive_LeftkD")) leftController.setD(AdjustableValues.getNumber("Drive_LeftkD"));
+
+        if (AdjustableValues.hasChanged("Drive_RightkP")) rightController.setP(AdjustableValues.getNumber("Drive_RightkP"));
+        if (AdjustableValues.hasChanged("Drive_RightkI")) rightController.setI(AdjustableValues.getNumber("Drive_RightkI"));
+        if (AdjustableValues.hasChanged("Drive_RightkD")) rightController.setD(AdjustableValues.getNumber("Drive_RightkD"));
+
+        // Driving the simulated drivetrain if the robot isn't in open loop control
+        if (!openLoop) {
+            leftVolts = leftController.calculate(driveSim.getLeftPositionMeters()) + AdjustableValues.getNumber("Drive_LeftkFF");
+            rightVolts = rightController.calculate(driveSim.getRightPositionMeters()) + AdjustableValues.getNumber("Drive_RightkFF");
+        }
+
         driveSim.setInputs(leftVolts, rightVolts);
 
+        // Updating the simulated values
         driveSim.update(0.02);
 
+        // Updating the inputs
         // Voltages
-        inputs.leftVoltage = getLeftVoltage();
-        inputs.rightVoltage = getRightVoltage();
+        inputs.leftVoltage = Volts.of(leftVolts);
+        inputs.rightVoltage = Volts.of(rightVolts);
 
         // Positions
-        inputs.leftPosition = getLeftPosition();
-        inputs.rightPosition = getRightPosition();
+        inputs.leftPosition = Meters.of(driveSim.getLeftPositionMeters());
+        inputs.rightPosition = Meters.of(driveSim.getRightPositionMeters());
 
         // Current
-        inputs.leftCurrent = getLeftCurrent();
-        inputs.rightCurrent = getRightCurrent();
-
-        // Temperature
-        inputs.leftTemperature = getLeftTemperature();
-        inputs.rightTemperature = getRightTemperature();
+        inputs.leftCurrent = Amps.of(driveSim.getLeftCurrentDrawAmps());
+        inputs.rightCurrent = Amps.of(driveSim.getRightCurrentDrawAmps());
 
         // Velocity
-        inputs.leftVelocity = getLeftVelocity();
-        inputs.rightVelocity = getRightVelocity();
-
-        Logger.processInputs("DrivetrainSimInputs", inputs);
+        inputs.leftVelocity = MetersPerSecond.of(driveSim.getLeftVelocityMetersPerSecond());
+        inputs.rightVelocity = MetersPerSecond.of(driveSim.getRightVelocityMetersPerSecond());
     }
 
     @Override
-    public Current getLeftCurrent() {
-        return Amps.of(driveSim.getLeftCurrentDrawAmps());
+    public void setLeftVoltage(Voltage volts) {
+        openLoop = true;
+
+        leftVolts = volts.in(Volts);
     }
 
     @Override
-    public Distance getLeftPosition() {
-        return Meters.of(driveSim.getLeftPositionMeters());
+    public void setRightVoltage(Voltage volts) {
+        openLoop = true;
+
+        rightVolts = volts.in(Volts);
     }
 
     @Override
-    public Temperature getLeftTemperature() {
-        return Celsius.zero();
+    public void setLeftSpeed(LinearVelocity velocity) {
+        openLoop = false;
+
+        leftController.setSetpoint(velocity.in(MetersPerSecond));
     }
 
     @Override
-    public Voltage getLeftVoltage() {
-        return Volts.of(leftVolts);
-    }
+    public void setRightSpeed(LinearVelocity velocity) {
+        openLoop = false;
 
-    @Override
-    public void setLeftVoltage(double volts) {
-        leftVolts = volts;
-    }
-
-    @Override
-    public LinearVelocity getLeftVelocity() {
-        return MetersPerSecond.of(driveSim.getLeftVelocityMetersPerSecond());
-    }
-
-    @Override
-    public Current getRightCurrent() {
-        return Amps.of(driveSim.getRightCurrentDrawAmps());
-    }
-
-    @Override
-    public Distance getRightPosition() {
-        return Meters.of(driveSim.getRightPositionMeters());
-    }
-
-    @Override
-    public Temperature getRightTemperature() {
-        return Celsius.zero();
-    }
-
-    @Override
-    public Voltage getRightVoltage() {
-        return Volts.of(rightVolts);
-    }
-
-    @Override
-    public void setRightVoltage(double volts) {
-        rightVolts = volts;
-    }
-
-    @Override
-    public LinearVelocity getRightVelocity() {
-        return MetersPerSecond.of(driveSim.getRightVelocityMetersPerSecond());
+        rightController.setSetpoint(velocity.in(MetersPerSecond));        
     }
 }

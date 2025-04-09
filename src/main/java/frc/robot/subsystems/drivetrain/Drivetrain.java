@@ -2,12 +2,11 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix.sensors.PigeonIMU;
+import org.littletonrobotics.junction.Logger;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPLTVController;
-import com.pathplanner.lib.util.DriveFeedforwards;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,24 +24,21 @@ import frc.robot.Constants.DriveConstants;
 
 public class Drivetrain extends SubsystemBase {
     private DrivetrainIO drivetrainIO;
-
-    // PID Controllers
-    private PIDController leftController;
-    private PIDController rightController;
-
-    // Gyro
-    private PigeonIMU gyro;
+    private DrivetrainIOInputsAutoLogged inputs;
 
     // Kinematics
     private DifferentialDriveKinematics kinematics;
 
     // Odometry
-    private Pose2d initPose = new Pose2d();
     private DifferentialDrivePoseEstimator poseEstimator;
+
+    private Rotation2d heading = new Rotation2d();
 
     /** Creates a new Drivetrain. */
     public Drivetrain(DrivetrainIO drivetrainIO) {
         this.drivetrainIO = drivetrainIO;
+
+        inputs = new DrivetrainIOInputsAutoLogged();
         
         // Pushing a warning to SmartDashboard if TalonSRXs are in use
         // They don't have built-in encoders and cannot run closed loop
@@ -50,24 +46,17 @@ public class Drivetrain extends SubsystemBase {
             SmartDashboard.putString("/Warnings/OpenLoop", "Running open loop!  Many logged values will be zero.");
         }
 
-        leftController = new PIDController(DriveConstants.kP, DriveConstants.kI, DriveConstants.kD);
-        rightController = new PIDController(DriveConstants.kP, DriveConstants.kI, DriveConstants.kD);
-
-        // Getting gyro
-        gyro = new PigeonIMU(10);
-        gyro.setYaw(0);
-
         // Initializing the kinematics
         kinematics = new DifferentialDriveKinematics(DriveConstants.robotWidth);
 
         // Initializing the pose estimator
-        poseEstimator = new DifferentialDrivePoseEstimator(kinematics, getAngle(), getLeftPosition().in(Meters), getRightPosition().in(Meters), initPose);
+        poseEstimator = new DifferentialDrivePoseEstimator(kinematics, getAngle(), getLeftPosition().in(Meters), getRightPosition().in(Meters), new Pose2d());
 
         // Initializing the autobuilder
         AutoBuilder.configure(
             this::getPose,
             this::setPose,
-            this::getSpeeds,
+            this::getChassisSpeeds,
             this::closedLoop,
             new PPLTVController(0.02),
             new RobotConfig(DriveConstants.mass, DriveConstants.momentOfInertia, null),
@@ -78,13 +67,18 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void periodic() {
-        drivetrainIO.updateInputs();
+        drivetrainIO.updateInputs(inputs);
+
+        Logger.processInputs("/RealOutputs/Drivetrain", inputs);
+
+        // Estimating heading from IO inputs
+        heading.plus(new Rotation2d(kinematics.toTwist2d(inputs.leftPosition.in(Meters), inputs.rightPosition.in(Meters)).dtheta));
 
         poseEstimator.update(getAngle(), getPosition());
     }
 
     public Rotation2d getAngle() {
-        return Rotation2d.fromDegrees(gyro.getYaw());
+        return heading;
     }
 
     public Pose2d getPose() {
@@ -95,8 +89,12 @@ public class Drivetrain extends SubsystemBase {
         poseEstimator.resetPosition(getAngle(), getPosition(), newPose);
     }
 
-    public ChassisSpeeds getSpeeds() {
-        return kinematics.toChassisSpeeds(new DifferentialDriveWheelSpeeds(getLeftVelocity(), getRightVelocity()));
+    public ChassisSpeeds getChassisSpeeds() {
+        return kinematics.toChassisSpeeds(getSpeeds());
+    }
+
+    public DifferentialDriveWheelSpeeds getSpeeds() {
+        return new DifferentialDriveWheelSpeeds(getLeftVelocity(), getRightVelocity());
     }
 
     public DifferentialDriveWheelPositions getPosition() {
@@ -104,46 +102,35 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public Distance getLeftPosition() {
-        return drivetrainIO.getLeftPosition();
+        return inputs.leftPosition;
     }
 
     public LinearVelocity getLeftVelocity() {
-        return drivetrainIO.getLeftVelocity();
+        return inputs.leftVelocity;
     }
 
     public Distance getRightPosition() {
-        return drivetrainIO.getRightPosition();
+        return inputs.rightPosition;
     }
 
     public LinearVelocity getRightVelocity() {
-        return drivetrainIO.getRightVelocity();
+        return inputs.rightVelocity;
     }
 
     public void arcadeDrive(double xSpeed, double zRotate) {
-        drivetrainIO.setLeftVoltage((xSpeed - zRotate) * RobotController.getInputVoltage());
-        drivetrainIO.setRightVoltage((xSpeed + zRotate) * RobotController.getInputVoltage());
+        drivetrainIO.setLeftVoltage(Volts.of((xSpeed - zRotate) * RobotController.getInputVoltage()));
+        drivetrainIO.setRightVoltage(Volts.of((xSpeed + zRotate) * RobotController.getInputVoltage()));
     }
 
     public void tankDrive(double leftSpeed, double rightSpeed) {
-        leftSpeed *= DriveConstants.maxOpenDriveSpeed;
-        rightSpeed *= DriveConstants.maxOpenTurnSpeed;
-
-        if (leftSpeed < 0.1 && leftSpeed > -0.1) leftSpeed = 0;
-        if (rightSpeed < 0.1 && rightSpeed > -0.1) rightSpeed = 0;
-
-        if (leftSpeed  != 0 && leftSpeed  > 0) leftSpeed  -= 0.1;
-        if (leftSpeed  != 0 && leftSpeed  < 0) leftSpeed  += 0.1;
-        if (rightSpeed != 0 && rightSpeed > 0) rightSpeed -= 0.1;
-        if (rightSpeed != 0 && rightSpeed < 0) rightSpeed += 0.1;
-
-        drivetrainIO.setLeftVoltage(leftSpeed * RobotController.getInputVoltage());
-        drivetrainIO.setRightVoltage(rightSpeed * RobotController.getInputVoltage());
+        drivetrainIO.setLeftVoltage(Volts.of(leftSpeed * RobotController.getInputVoltage()));
+        drivetrainIO.setRightVoltage(Volts.of(rightSpeed * RobotController.getInputVoltage()));
     }
 
-    public void closedLoop(ChassisSpeeds speeds, DriveFeedforwards ff) {
+    public void closedLoop(ChassisSpeeds speeds) {
         DifferentialDriveWheelSpeeds newSpeeds = kinematics.toWheelSpeeds(speeds);
         
-        drivetrainIO.setLeftVoltage(leftController.calculate(getLeftVelocity().in(MetersPerSecond), newSpeeds.leftMetersPerSecond) + DriveConstants.kFF);
-        drivetrainIO.setRightVoltage(rightController.calculate(getRightVelocity().in(MetersPerSecond), newSpeeds.rightMetersPerSecond) + DriveConstants.kFF);
+        drivetrainIO.setLeftSpeed(MetersPerSecond.of(newSpeeds.leftMetersPerSecond));
+        drivetrainIO.setRightSpeed(MetersPerSecond.of(newSpeeds.rightMetersPerSecond));
     }
 }

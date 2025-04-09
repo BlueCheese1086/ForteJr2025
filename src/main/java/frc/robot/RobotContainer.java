@@ -5,8 +5,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.ShooterConstants;
+import frc.robot.Constants.RobotMap;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.drivetrain.Commands.*;
 import frc.robot.subsystems.shooter.*;
@@ -24,8 +23,8 @@ public class RobotContainer {
     public RobotContainer() {
         // Initializing subsystems
         if (RobotBase.isReal()) {
-            drivetrain = new Drivetrain(new DrivetrainIOTalonSRX(DriveConstants.frontLeftID, DriveConstants.frontRightID, DriveConstants.backLeftID, DriveConstants.backRightID));
-            shooter = new Shooter(new ShooterIOSparkMax(ShooterConstants.feedID, ShooterConstants.launchID));
+            drivetrain = new Drivetrain(new DrivetrainIOTalonSRX(RobotMap.DRIVE_FrontLeftId, RobotMap.DRIVE_FrontRightId, RobotMap.DRIVE_BackLeftId, RobotMap.DRIVE_BackRightId));
+            shooter = new Shooter(new ShooterIOSparkMax(RobotMap.SHOOTER_FeedId, RobotMap.SHOOTER_LaunchId));
         } else {
             drivetrain = new Drivetrain(new DrivetrainIOSim());
             shooter = new Shooter(new ShooterIOSim());
@@ -47,9 +46,9 @@ public class RobotContainer {
     private void configureBindings() {
         drivetrain.setDefaultCommand(new ArcadeDrive(drivetrain, controller::getLeftY, controller::getRightX));
 
-        controller.a().whileTrue(new RunFeed(shooter, 1));
-        controller.b().whileTrue(new RunShooter(shooter, -1)).whileTrue(new RunFeed(shooter, -1));
-        controller.y().toggleOnTrue(new RunShooter(shooter, 1));
+        controller.a().whileTrue(new SetFeedPercent(shooter, 1));
+        controller.b().whileTrue(new SetLaunchPercent(shooter, -1)).whileTrue(new SetFeedPercent(shooter, -1));
+        controller.y().toggleOnTrue(new SetLaunchPercent(shooter, 1));
     }
 
     /**

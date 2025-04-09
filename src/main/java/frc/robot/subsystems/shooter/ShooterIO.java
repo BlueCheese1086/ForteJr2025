@@ -2,6 +2,8 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
@@ -10,36 +12,33 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ShooterIO {
     @AutoLog
     public class ShooterIOInputs {
-        double launchPercent = 0;
-        Temperature launchTemperature = Celsius.zero();
-        Current launchCurrent = Amps.zero();
-        Voltage launchVoltage = Volts.zero();
-
-        double feedPercent = 0;
-        Temperature feedTemperature = Celsius.zero();
         Current feedCurrent = Amps.zero();
+        double feedPercent = 0;
+        Angle feedPosition = Radians.zero();
+        Temperature feedTemperature = Celsius.zero();
+        AngularVelocity feedVelocity = RPM.zero();
         Voltage feedVoltage = Volts.zero();
+
+        Current launchCurrent = Amps.zero();
+        double launchPercent = 0;
+        Angle launchPosition = Radians.zero();
+        Temperature launchTemperature = Celsius.zero();
+        AngularVelocity launchVelocity = RPM.zero();
+        Voltage launchVoltage = Volts.zero();
     }
 
-    public void updateInputs();
+    /** Updates a set of {@link ShooterIOInputs} with up-to-date values. */
+    public void updateInputs(ShooterIOInputs inputs);
 
-    public double getLaunchPercent();
+    /** Sets the open loop percent output of the feed motor. */
+    public void setFeedPercent(double percent);
 
-    public void setLaunchPercent(double speed);
+    /** Sets the open loop percent output of the launch motor. */
+    public void setLaunchPercent(double percent);
 
-    public Temperature getLaunchTemperature();
+    /** Sets the closed loop velocity output of the feed motor. */
+    public void setFeedSpeed(AngularVelocity speed);
 
-    public Current getLaunchCurrent();
-
-    public Voltage getLaunchVoltage();
-
-    public double getFeedPercent();
-
-    public void setFeedPercent(double speed);
-
-    public Temperature getFeedTemperature();
-
-    public Current getFeedCurrent();
-
-    public Voltage getFeedVoltage();
+    /** Sets the closed loop velocity output of the launch motor. */
+    public void setLaunchSpeed(AngularVelocity speed);
 }

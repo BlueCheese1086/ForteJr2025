@@ -19,24 +19,22 @@ import edu.wpi.first.units.measure.MomentOfInertia;
 public final class Constants {
     public static final boolean isReplay = false;
 
-    public static class ControllerConstants {
-        // Controller IDs
-        public static final int driverId = 0;
-        public static final int operatorId = 1;
+    // Controller deadband
+    public static final double deadband = 0.1; // Percent
 
-        // Controller deadband
-        public static final double deadband = 0.1; // Percent
+    public class RobotMap {
+        public static final int DRIVE_FrontLeftId = 1;  // CAN (TalonSRX)
+        public static final int DRIVE_FrontRightId = 2; // CAN (TalonSRX)
+        public static final int DRIVE_BackLeftId = 3;   // CAN (TalonSRX)
+        public static final int DRIVE_BackRightId = 4;  // CAN (TalonSRX)
+
+        public static final int SHOOTER_FeedId = 11;   // CAN (SparkMax)
+        public static final int SHOOTER_LaunchId = 12; // CAN (SparkMax)
     }
 
     public static class DriveConstants {
         // Moment of Inertia
         public static final MomentOfInertia momentOfInertia = KilogramSquareMeters.of(0.862168364);
-
-        // Motor IDs
-        public static final int frontLeftID = 1;
-        public static final int backLeftID = 2;
-        public static final int frontRightID = 3;
-        public static final int backRightID = 4;
 
         // Robot specs
         public static final Distance robotWidth = Inches.of(13);
@@ -62,13 +60,11 @@ public final class Constants {
     }
 
     public static class ShooterConstants {
-        // Motor IDs
-        public static final int feedID = 11;
-        public static final int launchID = 12;
-
         // Max speeds
-        public static final AngularVelocity maxFeedSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
-        public static final AngularVelocity maxLaunchSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
+        public static final AngularVelocity maxClosedFeedSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
+        public static final AngularVelocity maxClosedLaunchSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
+        public static final double maxOpenFeedSpeed = 1; // Percent
+        public static final double maxOpenLaunchSpeed = 1; // Percent
 
         // PIDFF values
         public static final double launchP  = 0.0;

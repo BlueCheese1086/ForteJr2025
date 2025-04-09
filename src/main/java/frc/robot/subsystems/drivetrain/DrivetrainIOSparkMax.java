@@ -2,22 +2,18 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
-
-import org.littletonrobotics.junction.Logger;
+import frc.robot.util.AdjustableValues;
 
 public class DrivetrainIOSparkMax implements DrivetrainIO {
     private SparkMax flMotor;
@@ -28,7 +24,8 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
     private RelativeEncoder flEncoder;
     private RelativeEncoder frEncoder;
 
-    private DrivetrainIOInputsAutoLogged inputs;
+    private SparkClosedLoopController flController;
+    private SparkClosedLoopController frController;
 
     public DrivetrainIOSparkMax(int frontLeftID, int frontRightID, int backLeftID, int backRightID) {
         // Initializing the motors
@@ -41,6 +38,10 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
         SparkMaxConfig config = new SparkMaxConfig();
 
         config.idleMode(IdleMode.kBrake);
+        config.closedLoop.p(AdjustableValues.getNumber("Drive_kP"));
+        config.closedLoop.i(AdjustableValues.getNumber("Drive_kI"));
+        config.closedLoop.d(AdjustableValues.getNumber("Drive_kD"));
+        config.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_kFF"));
 
         frMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         
@@ -61,91 +62,67 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
         flEncoder = flMotor.getEncoder();
         frEncoder = frMotor.getEncoder();
 
-        inputs = new DrivetrainIOInputsAutoLogged();
+        // Getting the controllers for each motor
+        flController = flMotor.getClosedLoopController();
+        frController = frMotor.getClosedLoopController();
     }
 
     @Override
-    public void updateInputs() {
+    public void updateInputs(DrivetrainIOInputs inputs) {
+        // Updating PID values
+        SparkMaxConfig config = new SparkMaxConfig();
+        if (AdjustableValues.hasChanged("Drive_LeftkP")) config.closedLoop.p(AdjustableValues.getNumber("Drive_LeftkP"));
+        if (AdjustableValues.hasChanged("Drive_LeftkI")) config.closedLoop.i(AdjustableValues.getNumber("Drive_LeftkI"));
+        if (AdjustableValues.hasChanged("Drive_LeftkD")) config.closedLoop.d(AdjustableValues.getNumber("Drive_LeftkD"));
+        if (AdjustableValues.hasChanged("Drive_LeftkFF")) config.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_LeftkFF"));
+        if (!config.equals(new SparkMaxConfig())) flMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        config = new SparkMaxConfig();
+        if (AdjustableValues.hasChanged("Drive_RightkP")) config.closedLoop.p(AdjustableValues.getNumber("Drive_RightkP"));
+        if (AdjustableValues.hasChanged("Drive_RightkI")) config.closedLoop.i(AdjustableValues.getNumber("Drive_RightkI"));
+        if (AdjustableValues.hasChanged("Drive_RightkD")) config.closedLoop.d(AdjustableValues.getNumber("Drive_RightkD"));
+        if (AdjustableValues.hasChanged("Drive_RightkFF")) config.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_RightkFF"));
+        if (!config.equals(new SparkMaxConfig())) frMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        // Updating inputs
         // Voltages
-        inputs.leftVoltage = getLeftVoltage();
-        inputs.rightVoltage = getRightVoltage();
+        inputs.leftVoltage = Volts.of(flMotor.getAppliedOutput() * flMotor.getBusVoltage());
+        inputs.rightVoltage = Volts.of(frMotor.getAppliedOutput() * frMotor.getBusVoltage());
 
         // Positions
-        inputs.leftPosition = getLeftPosition();
-        inputs.rightPosition = getRightPosition();
+        inputs.leftPosition = Meters.of(flEncoder.getPosition());
+        inputs.rightPosition = Meters.of(frEncoder.getPosition());
 
         // Current
-        inputs.leftCurrent = getLeftCurrent();
-        inputs.rightCurrent = getRightCurrent();
+        inputs.leftCurrent = Amps.of(flMotor.getOutputCurrent());
+        inputs.rightCurrent = Amps.of(frMotor.getOutputCurrent());
 
         // Temperature
-        inputs.leftTemperature = getLeftTemperature();
-        inputs.rightTemperature = getRightTemperature();
+        inputs.leftTemperature = Celsius.of(flMotor.getMotorTemperature());
+        inputs.rightTemperature = Celsius.of(frMotor.getMotorTemperature());
 
         // Velocity
-        inputs.leftVelocity = getLeftVelocity();
-        inputs.rightVelocity = getRightVelocity();
-
-        Logger.processInputs("DrivetrainSparkMaxInputs", inputs);
+        inputs.leftVelocity = MetersPerSecond.of(flEncoder.getVelocity());
+        inputs.rightVelocity = MetersPerSecond.of(frEncoder.getVelocity());
     }
 
     @Override
-    public Current getLeftCurrent() {
-        return Amps.of((flMotor.getOutputCurrent() + blMotor.getOutputCurrent()) / 2.0);
-    }
-
-    @Override
-    public Distance getLeftPosition() {
-        return Meters.of(flEncoder.getPosition() * DriveConstants.rotToMeters);
-    }
-
-    @Override
-    public Temperature getLeftTemperature() {
-        return Celsius.of(flMotor.getMotorTemperature());
-    }
-
-    @Override
-    public LinearVelocity getLeftVelocity() {
-        return MetersPerSecond.of(flEncoder.getVelocity() * DriveConstants.rotToMeters / 60);
-    }
-
-    @Override
-    public Voltage getLeftVoltage() {
-        return Volts.of(flMotor.getBusVoltage());
-    }
-
-    @Override
-    public void setLeftVoltage(double volts) {
+    public void setLeftVoltage(Voltage volts) {
         flMotor.setVoltage(volts);
     }
 
     @Override
-    public Current getRightCurrent() {
-        return Amps.of((frMotor.getOutputCurrent() + brMotor.getOutputCurrent()) / 2.0);
-    }
-
-    @Override
-    public Distance getRightPosition() {
-        return Meters.of(frEncoder.getPosition() * DriveConstants.rotToMeters);
-    }
-
-    @Override
-    public Temperature getRightTemperature() {
-        return Celsius.of(frMotor.getMotorTemperature());
-    }
-
-    @Override
-    public LinearVelocity getRightVelocity() {
-        return MetersPerSecond.of(frEncoder.getVelocity() * DriveConstants.rotToMeters / 60);
-    }
-
-    @Override
-    public Voltage getRightVoltage() {
-        return Volts.of(frMotor.getBusVoltage());
-    }
-
-    @Override
-    public void setRightVoltage(double volts) {
+    public void setRightVoltage(Voltage volts) {
         frMotor.setVoltage(volts);
+    }
+
+    @Override
+    public void setLeftSpeed(LinearVelocity velocity) {
+        flController.setReference(velocity.in(MetersPerSecond), ControlType.kVelocity);
+    }
+
+    @Override
+    public void setRightSpeed(LinearVelocity velocity) {
+        frController.setReference(velocity.in(MetersPerSecond), ControlType.kVelocity);
     }
 }

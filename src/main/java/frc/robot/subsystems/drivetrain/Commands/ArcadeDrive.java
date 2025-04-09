@@ -1,22 +1,19 @@
 package frc.robot.subsystems.drivetrain.Commands;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants.ControllerConstants;
+import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.drivetrain.Drivetrain;
-
+import frc.robot.util.MathUtils;
 import java.util.function.Supplier;
 
-/** A command that drives a {@link Drivetrain} using open loop tank control. */
 public class ArcadeDrive extends Command {
-    @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
-    private final Drivetrain drivetrain;
-    private final Supplier<Double> xSpeedSupplier;
-    private final Supplier<Double> zRotatSupplier;
+    private Drivetrain drivetrain;
+    private Supplier<Double> xSpeedSupplier;
+    private Supplier<Double> zRotatSupplier;
 
     /**
-     * Creates a new ArcadeDrive command.
+     * Creates a new {@link ArcadeDrive} command.
      * This command drives a {@link Drivetrain} using open loop controls.
      * It drives with one joystick controlling the forwards/backwards speeds of the robot, and another joystick controlling the turn speeds of the robot.
      *
@@ -32,10 +29,6 @@ public class ArcadeDrive extends Command {
         addRequirements(drivetrain);
     }
 
-    /** Called when the command is initially scheduled. */
-    @Override
-    public void initialize() {}
-
     /** Called every time the scheduler runs while this command is scheduled. */
     @Override
     public void execute() {
@@ -44,14 +37,8 @@ public class ArcadeDrive extends Command {
         double zRotat = zRotatSupplier.get();
 
         // Applying a deadband
-        MathUtil.applyDeadband(xSpeed, ControllerConstants.deadband);
-        MathUtil.applyDeadband(zRotat, ControllerConstants.deadband);
-
-        // Smoothing out the deadband (prevents jumping from 0% to 10%)
-        if (xSpeed > 0) xSpeed -= ControllerConstants.deadband;
-        if (xSpeed < 0) xSpeed += ControllerConstants.deadband;
-        if (zRotat > 0) zRotat -= ControllerConstants.deadband;
-        if (zRotat < 0) zRotat += ControllerConstants.deadband;
+        MathUtils.applyDeadbandWithOffsets(xSpeed, Constants.deadband, 0.9);
+        MathUtils.applyDeadbandWithOffsets(zRotat, Constants.deadband, 0.9);
 
         // Scaling for max speeds
         xSpeed *= DriveConstants.maxOpenDriveSpeed;
@@ -59,16 +46,6 @@ public class ArcadeDrive extends Command {
 
         // Driving the robot
         drivetrain.arcadeDrive(xSpeed, zRotat);
-    }
-
-    /**
-     * Called every time the scheduler runs while this command is scheduled.
-     * 
-     * @return Whether or not the command should be canceled.
-     */
-    @Override
-    public boolean isFinished() {
-        return false;
     }
 
     /** Called when the command is cancelled, either by the scheduler or when {@link ArcadeDrive#isFinished} returns true. */

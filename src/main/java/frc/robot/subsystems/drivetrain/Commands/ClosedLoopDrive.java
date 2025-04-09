@@ -2,25 +2,21 @@ package frc.robot.subsystems.drivetrain.Commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
-import com.pathplanner.lib.util.DriveFeedforwards;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants.ControllerConstants;
+import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.drivetrain.Drivetrain;
-
+import frc.robot.util.MathUtils;
 import java.util.function.Supplier;
 
-/** A command that drives a {@link Drivetrain} using closed loop control. */
 public class ClosedLoopDrive extends Command {
-    @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
     private Drivetrain drivetrain;
     private Supplier<Double> xSpeedSupplier;
     private Supplier<Double> zRotatSupplier;
 
     /**
-     * Creates a new ClosedLoopDrive command.
+     * Creates a new {@link ClosedLoopDrive} command.
      * This command drives a {@link Drivetrain} using a closed-loop PID controller.
      * 
      * @param xSpeedSupplier The supplier for the x translational speed.
@@ -35,48 +31,24 @@ public class ClosedLoopDrive extends Command {
         addRequirements(drivetrain);
     }
 
-    /** Called when the command is initially scheduled. */
-    @Override
-    public void initialize() {}
-
     /** Called every time the scheduler runs while this command is scheduled. */
     @Override
     public void execute() {
         // Executing the suppliers
-        double xSpeed = xSpeedSupplier.get();
-        double zRotat = zRotatSupplier.get();
-
-        // Applying a deadband
-        MathUtil.applyDeadband(xSpeed, ControllerConstants.deadband);
-        MathUtil.applyDeadband(zRotat, ControllerConstants.deadband);
-
-        // Smoothing out the deadband (prevents jumping from 0% to 10%)
-        if (xSpeed > 0) xSpeed -= ControllerConstants.deadband;
-        if (xSpeed < 0) xSpeed += ControllerConstants.deadband;
-        if (zRotat > 0) zRotat -= ControllerConstants.deadband;
-        if (zRotat < 0) zRotat += ControllerConstants.deadband;
+        double xSpeed = MathUtils.applyDeadbandWithOffsets(xSpeedSupplier.get(), Constants.deadband, 0.9);
+        double zRotat = MathUtils.applyDeadbandWithOffsets(zRotatSupplier.get(), Constants.deadband, 0.9);
 
         // Scaling for max speeds
         xSpeed *= DriveConstants.maxClosedDriveSpeed.in(MetersPerSecond);
         zRotat *= DriveConstants.maxClosedTurnSpeed.in(MetersPerSecond);
         
         // Driving the robot
-        drivetrain.closedLoop(new ChassisSpeeds(xSpeed, 0, zRotat), DriveFeedforwards.zeros(0));
-    }
-
-    /**
-     * Called every time the scheduler runs while this command is scheduled.
-     * 
-     * @return Whether or not the command should be canceled.
-     */
-    @Override
-    public boolean isFinished() {
-        return false;
+        drivetrain.closedLoop(new ChassisSpeeds(xSpeed, 0, zRotat));
     }
 
     /** Called when the command is cancelled, either by the scheduler or when {@link ClosedLoopDrive#isFinished} returns true. */
     @Override
     public void end(boolean interrupted) {
-        drivetrain.closedLoop(new ChassisSpeeds(), DriveFeedforwards.zeros(0));
+        drivetrain.closedLoop(new ChassisSpeeds());
     }
 }

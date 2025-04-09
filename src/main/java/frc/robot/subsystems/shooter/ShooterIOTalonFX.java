@@ -1,95 +1,101 @@
 package frc.robot.subsystems.shooter;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.AngularVelocity;
+import frc.robot.Constants.ShooterConstants;
+import frc.robot.util.AdjustableValues;
 
 public class ShooterIOTalonFX implements ShooterIO {
-    private TalonFX feedMotor;
-    private TalonFX launchMotor;
+    private TalonFX feed;
+    private TalonFX launch;
 
-    private ShooterIOInputs inputs;
+    // Control methods
+    private DutyCycleOut feedOpenLoop = new DutyCycleOut(0);
+    private DutyCycleOut launchOpenLoop = new DutyCycleOut(0);
+    private VelocityVoltage feedClosedLoop = new VelocityVoltage(0).withSlot(0);
+    private VelocityVoltage launchClosedLoop = new VelocityVoltage(0).withSlot(0);
 
     public ShooterIOTalonFX(int feedId, int launchId) {
-        feedMotor = new TalonFX(feedId);
-        launchMotor = new TalonFX(launchId);
+        feed = new TalonFX(feedId);
+        launch = new TalonFX(launchId);
 
-        TalonFXConfiguration config = new TalonFXConfiguration();
+        TalonFXConfiguration feedConfig = new TalonFXConfiguration();
 
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        feedConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        feedConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        feedConfig.Slot0.kP = AdjustableValues.getNumber("Feed_kP");
+        feedConfig.Slot0.kI = ShooterConstants.feedI;
+        feedConfig.Slot0.kD = ShooterConstants.feedD;
 
-        feedMotor.getConfigurator().apply(config);
-        launchMotor.getConfigurator().apply(config);
+        TalonFXConfiguration launchConfig = new TalonFXConfiguration();
 
-        inputs = new ShooterIOInputs();
+        launchConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        launchConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        launchConfig.Slot0.kP = ShooterConstants.feedP;
+        launchConfig.Slot0.kI = ShooterConstants.feedI;
+        launchConfig.Slot0.kD = ShooterConstants.feedD;
+
+        feed.getConfigurator().apply(feedConfig);
+        launch.getConfigurator().apply(launchConfig);
     }
 
     @Override
-    public void updateInputs() {
-        inputs.feedCurrent = getFeedCurrent();
-        inputs.feedPercent = getFeedPercent();
-        inputs.feedTemperature = getFeedTemperature();
-        inputs.feedVoltage = getFeedVoltage();
+    public void updateInputs(ShooterIOInputs inputs) {
+        // Updating PID values
+        Slot0Configs config = new Slot0Configs();
+        if (AdjustableValues.hasChanged("Feed_kP")) config.kP = AdjustableValues.getNumber("Feed_kP");
+        if (AdjustableValues.hasChanged("Feed_kI")) config.kI = AdjustableValues.getNumber("Feed_kI");
+        if (AdjustableValues.hasChanged("Feed_kD")) config.kD = AdjustableValues.getNumber("Feed_kD");
+        if (!config.equals(new Slot0Configs())) feed.getConfigurator().apply(config);
 
-        inputs.launchCurrent = getLaunchCurrent();
-        inputs.launchPercent = getLaunchPercent();
-        inputs.launchTemperature = getLaunchTemperature();
-        inputs.launchVoltage = getLaunchVoltage();
-    }
+        config = new Slot0Configs();
+        if (AdjustableValues.hasChanged("Launch_kP")) config.kP = AdjustableValues.getNumber("Launch_kP");
+        if (AdjustableValues.hasChanged("Launch_kI")) config.kI = AdjustableValues.getNumber("Launch_kI");
+        if (AdjustableValues.hasChanged("Launch_kD")) config.kD = AdjustableValues.getNumber("Launch_kD");
+        if (!config.equals(new Slot0Configs())) launch.getConfigurator().apply(config);
 
-    @Override
-    public double getLaunchPercent() {
-        return launchMotor.get();
-    }
+        if (AdjustableValues.hasChanged("Feed_kFF")) feedClosedLoop.withFeedForward(AdjustableValues.getNumber("Feed_kFF"));
+        if (AdjustableValues.hasChanged("Launch_kFF")) launchClosedLoop.withFeedForward(AdjustableValues.getNumber("Launch_kFF"));
 
-    @Override
-    public void setLaunchPercent(double speed) {
-        launchMotor.set(speed);
-    }
+        // Updating inputs
+        inputs.feedCurrent = feed.getStatorCurrent().getValue();
+        inputs.feedPercent = feed.get();
+        inputs.feedPosition = feed.getPosition().getValue();
+        inputs.feedTemperature = feed.getDeviceTemp().getValue();
+        inputs.feedVelocity = feed.getVelocity().getValue();
+        inputs.feedVoltage = feed.getMotorVoltage().getValue();
 
-    @Override
-    public Temperature getLaunchTemperature() {
-        return launchMotor.getDeviceTemp().getValue();
-    }
-
-    @Override
-    public Current getLaunchCurrent() {
-        return launchMotor.getStatorCurrent().getValue();
-    }
-
-    @Override
-    public Voltage getLaunchVoltage() {
-        return launchMotor.getMotorVoltage().getValue();
-    }
-
-    @Override
-    public double getFeedPercent() {
-        return feedMotor.get();
+        inputs.launchCurrent = launch.getStatorCurrent().getValue();
+        inputs.launchPercent = launch.get();
+        inputs.launchPosition = launch.getPosition().getValue();
+        inputs.launchTemperature = launch.getDeviceTemp().getValue();
+        inputs.launchVelocity = launch.getVelocity().getValue();
+        inputs.launchVoltage = launch.getMotorVoltage().getValue();
     }
 
     @Override
     public void setFeedPercent(double speed) {
-        feedMotor.set(speed);
+        feed.setControl(feedOpenLoop.withOutput(speed));
     }
 
     @Override
-    public Temperature getFeedTemperature() {
-        return feedMotor.getDeviceTemp().getValue();
+    public void setLaunchPercent(double speed) {
+        launch.setControl(launchOpenLoop.withOutput(speed));
     }
 
     @Override
-    public Current getFeedCurrent() {
-        return feedMotor.getStatorCurrent().getValue();
+    public void setFeedSpeed(AngularVelocity speed) {
+        feed.setControl(feedClosedLoop.withVelocity(speed));
     }
 
     @Override
-    public Voltage getFeedVoltage() {
-        return feedMotor.getMotorVoltage().getValue();
+    public void setLaunchSpeed(AngularVelocity speed) {
+        launch.setControl(launchClosedLoop.withVelocity(speed));
     }
 }

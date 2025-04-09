@@ -5,89 +5,67 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.Alert;
+import frc.robot.Constants.ShooterConstants;
 
 public class ShooterIOTalonSRX implements ShooterIO {
-    private TalonSRX feedMotor;
-    private TalonSRX launchMotor;
+    private TalonSRX feed;
+    private TalonSRX launch;
 
-    private ShooterIOInputs inputs;
+    // Alert for when the user uses closed loop control on the brushed motor controllers.
+    private Alert noClosedLoop = new Alert("TalonSRX unable to use closed loop control.  Rolling back to percent output.", Alert.AlertType.kWarning);
 
     public ShooterIOTalonSRX(int feedId, int launchId) {
-        feedMotor = new TalonSRX(feedId);
-        launchMotor = new TalonSRX(launchId);
+        feed = new TalonSRX(feedId);
+        launch = new TalonSRX(launchId);
 
-        feedMotor.setInverted(true);
-        feedMotor.setNeutralMode(NeutralMode.Brake);
+        feed.setInverted(true);
+        feed.setNeutralMode(NeutralMode.Brake);
 
-        launchMotor.setInverted(true);
-        launchMotor.setNeutralMode(NeutralMode.Brake);
-
-        inputs = new ShooterIOInputs();
+        launch.setInverted(true);
+        launch.setNeutralMode(NeutralMode.Brake);
     }
 
     @Override
-    public void updateInputs() {
-        inputs.feedCurrent = getFeedCurrent();
-        inputs.feedPercent = getFeedPercent();
-        inputs.feedTemperature = getFeedTemperature();
-        inputs.feedVoltage = getFeedVoltage();
+    public void updateInputs(ShooterIOInputs inputs) {
+        // Updating inputs
+        inputs.feedCurrent = Amps.of(feed.getStatorCurrent());
+        inputs.feedPercent = feed.getMotorOutputPercent();
+        inputs.feedTemperature = Celsius.of(feed.getTemperature());
+        inputs.feedVoltage = Volts.of(feed.getMotorOutputVoltage());
 
-        inputs.launchCurrent = getLaunchCurrent();
-        inputs.launchPercent = getLaunchPercent();
-        inputs.launchTemperature = getLaunchTemperature();
-        inputs.launchVoltage = getLaunchVoltage();
-    }
-
-    @Override
-    public double getLaunchPercent() {
-        return launchMotor.getMotorOutputPercent();
+        inputs.launchCurrent = Amps.of(launch.getStatorCurrent());
+        inputs.launchPercent = launch.getMotorOutputPercent();
+        inputs.launchTemperature = Celsius.of(launch.getTemperature());
+        inputs.launchVoltage = Volts.of(launch.getMotorOutputVoltage());
     }
 
     @Override
     public void setLaunchPercent(double speed) {
-        launchMotor.set(ControlMode.PercentOutput, speed);
-    }
+        noClosedLoop.set(false);
 
-    @Override
-    public Temperature getLaunchTemperature() {
-        return Celsius.of(launchMotor.getTemperature());
-    }
-
-    @Override
-    public Current getLaunchCurrent() {
-        return Amps.of(launchMotor.getStatorCurrent());
-    }
-
-    @Override
-    public Voltage getLaunchVoltage() {
-        return Volts.of(launchMotor.getMotorOutputVoltage());
-    }
-
-    @Override
-    public double getFeedPercent() {
-        return feedMotor.getMotorOutputPercent();
+        launch.set(ControlMode.PercentOutput, speed);
     }
 
     @Override
     public void setFeedPercent(double speed) {
-        feedMotor.set(ControlMode.PercentOutput, speed);
+        noClosedLoop.set(false);
+
+        feed.set(ControlMode.PercentOutput, speed);
     }
 
     @Override
-    public Temperature getFeedTemperature() {
-        return Celsius.of(feedMotor.getTemperature());
+    public void setFeedSpeed(AngularVelocity speed) {
+        noClosedLoop.set(true);
+
+        feed.set(ControlMode.PercentOutput, speed.div(ShooterConstants.maxClosedFeedSpeed).magnitude());
     }
 
     @Override
-    public Current getFeedCurrent() {
-        return Amps.of(feedMotor.getStatorCurrent());
-    }
+    public void setLaunchSpeed(AngularVelocity speed) {
+        noClosedLoop.set(true);
 
-    @Override
-    public Voltage getFeedVoltage() {
-        return Volts.of(feedMotor.getMotorOutputVoltage());
+        launch.set(ControlMode.PercentOutput, speed.div(ShooterConstants.maxClosedLaunchSpeed).magnitude());
     }
 }

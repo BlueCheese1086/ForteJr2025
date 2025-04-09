@@ -2,6 +2,10 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.ShooterConstants;
+import frc.robot.util.AdjustableValues;
+
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -33,6 +37,21 @@ public class Robot extends LoggedRobot {
 
         // Instantiate the RobotContainer.  This will assign all our button bindings.
         robotContainer = new RobotContainer();
+
+        AdjustableValues.registerNumber("Drive_kP", "/Adjustables/Drive/kP", DriveConstants.kP, "Drive_LeftkP", "Drive_RightkP");
+        AdjustableValues.registerNumber("Drive_kI", "/Adjustables/Drive/kI", DriveConstants.kI, "Drive_LeftkI", "Drive_RightkI");
+        AdjustableValues.registerNumber("Drive_kD", "/Adjustables/Drive/kD", DriveConstants.kD, "Drive_LeftkD", "Drive_RightkD");
+        AdjustableValues.registerNumber("Drive_kFF", "/Adjustables/Drive/kFF", DriveConstants.kFF, "Drive_LeftkFF", "Drive_RightkFF");
+
+        AdjustableValues.registerNumber("Feed_kP", "/Adjustables/Feed/kP", ShooterConstants.feedP);
+        AdjustableValues.registerNumber("Feed_kI", "/Adjustables/Feed/kI", ShooterConstants.feedI);
+        AdjustableValues.registerNumber("Feed_kD", "/Adjustables/Feed/kD", ShooterConstants.feedD);
+        AdjustableValues.registerNumber("Feed_kFF", "/Adjustables/Feed/kFF", ShooterConstants.feedFF);
+
+        AdjustableValues.registerNumber("Launch_kP", "/Adjustables/Launch/kP", ShooterConstants.launchP);
+        AdjustableValues.registerNumber("Launch_kI", "/Adjustables/Launch/kI", ShooterConstants.launchI);
+        AdjustableValues.registerNumber("Launch_kD", "/Adjustables/Launch/kD", ShooterConstants.launchD);
+        AdjustableValues.registerNumber("Launch_kFF", "/Adjustables/Launch/kFF", ShooterConstants.launchFF);
     }
 
     /**

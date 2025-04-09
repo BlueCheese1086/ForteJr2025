@@ -2,22 +2,18 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Drivetrain.DrivetrainIOInputsAutoLogged;
-
-import org.littletonrobotics.junction.Logger;
+import frc.robot.util.AdjustableValues;
 
 public class DrivetrainIOTalonFX implements DrivetrainIO {
     private TalonFX flMotor;
@@ -25,7 +21,11 @@ public class DrivetrainIOTalonFX implements DrivetrainIO {
     private TalonFX blMotor;
     private TalonFX brMotor;
 
-    private DrivetrainIOInputsAutoLogged inputs;
+    // Control methods
+    private VoltageOut leftOpenLoop = new VoltageOut(0);
+    private VoltageOut rightOpenLoop = new VoltageOut(0);
+    private VelocityVoltage leftClosedLoop = new VelocityVoltage(0).withSlot(0);
+    private VelocityVoltage rightClosedLoop = new VelocityVoltage(0).withSlot(0);
 
     public DrivetrainIOTalonFX(int frontLeftID, int frontRightID, int backLeftID, int backRightID) {
         // Initializing the motors
@@ -34,22 +34,24 @@ public class DrivetrainIOTalonFX implements DrivetrainIO {
         blMotor = new TalonFX(backLeftID);
         brMotor = new TalonFX(backRightID);
 
-        // Resetting the motors
-        // The loops either force the configuration to finish, or prevent the program from continuing.
-        while (flMotor.getConfigurator().apply(new TalonFXConfiguration()) != StatusCode.OK) {}
-        while (frMotor.getConfigurator().apply(new TalonFXConfiguration()) != StatusCode.OK) {}
-        while (blMotor.getConfigurator().apply(new TalonFXConfiguration()) != StatusCode.OK) {}
-        while (brMotor.getConfigurator().apply(new TalonFXConfiguration()) != StatusCode.OK) {}
-
         // Applying configs to each motor
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        config.Feedback.SensorToMechanismRatio = DriveConstants.gearRatio;
+        config.Slot0.kP = AdjustableValues.getNumber("Drive_LeftkP");
+        config.Slot0.kI = AdjustableValues.getNumber("Drive_LeftkI");
+        config.Slot0.kD = AdjustableValues.getNumber("Drive_LeftkD");
 
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
         flMotor.getConfigurator().apply(config);
         blMotor.getConfigurator().apply(config);
 
+        config.Slot0.kP = AdjustableValues.getNumber("Drive_RightkP");
+        config.Slot0.kI = AdjustableValues.getNumber("Drive_RightkI");
+        config.Slot0.kD = AdjustableValues.getNumber("Drive_RightkD");
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
         frMotor.getConfigurator().apply(config);
         brMotor.getConfigurator().apply(config);
 
@@ -57,7 +59,8 @@ public class DrivetrainIOTalonFX implements DrivetrainIO {
         blMotor.setControl(new Follower(flMotor.getDeviceID(), false));
         brMotor.setControl(new Follower(frMotor.getDeviceID(), false));
 
-        inputs = new DrivetrainIOInputsAutoLogged();
+        leftClosedLoop.withFeedForward(AdjustableValues.getNumber("Drive_LeftkFF"));
+        rightClosedLoop.withFeedForward(AdjustableValues.getNumber("Drive_RightkFF"));
     }
 
     /**
@@ -67,87 +70,62 @@ public class DrivetrainIOTalonFX implements DrivetrainIO {
      * @param inputs An instance of the class that contains the inputs that need to be logged.
      */
     @Override
-    public void updateInputs() {
+    public void updateInputs(DrivetrainIOInputs inputs) {
+        // Updating PID values
+        Slot0Configs config = new Slot0Configs();
+        if (AdjustableValues.hasChanged("Drive_LeftkP")) config.kP = AdjustableValues.getNumber("Drive_LeftkP");
+        if (AdjustableValues.hasChanged("Drive_LeftkI")) config.kI = AdjustableValues.getNumber("Drive_LeftkI");
+        if (AdjustableValues.hasChanged("Drive_LeftkD")) config.kD = AdjustableValues.getNumber("Drive_LeftkD");
+        if (!config.equals(new Slot0Configs())) flMotor.getConfigurator().apply(config);
+
+        config = new Slot0Configs();
+        if (AdjustableValues.hasChanged("Drive_RightkP")) config.kP = AdjustableValues.getNumber("Drive_RightkP");
+        if (AdjustableValues.hasChanged("Drive_RightkI")) config.kI = AdjustableValues.getNumber("Drive_RightkI");
+        if (AdjustableValues.hasChanged("Drive_RightkD")) config.kD = AdjustableValues.getNumber("Drive_RightkD");
+        if (!config.equals(new Slot0Configs())) frMotor.getConfigurator().apply(config);
+
+        if (AdjustableValues.hasChanged("Drive_LeftkFF")) leftClosedLoop.withFeedForward(AdjustableValues.getNumber("Drive_LeftkFF"));
+        if (AdjustableValues.hasChanged("Drive_RightkFF")) rightClosedLoop.withFeedForward(AdjustableValues.getNumber("Drive_RightkFF"));
+
+        // Updating inputs
         // Voltages
-        inputs.leftVoltage = getLeftVoltage();
-        inputs.rightVoltage = getRightVoltage();
+        inputs.leftVoltage = flMotor.getMotorVoltage().getValue();
+        inputs.rightVoltage = frMotor.getMotorVoltage().getValue();
 
         // Positions
-        inputs.leftPosition = getLeftPosition();
-        inputs.rightPosition = getRightPosition();
+        inputs.leftPosition = DriveConstants.wheelRadius.times(flMotor.getPosition().getValue().in(Radians));
+        inputs.rightPosition = DriveConstants.wheelRadius.times(frMotor.getPosition().getValue().in(Radians));
 
         // Current
-        inputs.leftCurrent = getLeftCurrent();
-        inputs.rightCurrent = getRightCurrent();
+        inputs.leftCurrent = flMotor.getStatorCurrent().getValue();
+        inputs.rightCurrent = frMotor.getStatorCurrent().getValue();
 
         // Temperature
-        inputs.leftTemperature = getLeftTemperature();
-        inputs.rightTemperature = getRightTemperature();
+        inputs.leftTemperature = flMotor.getDeviceTemp().getValue();
+        inputs.rightTemperature = frMotor.getDeviceTemp().getValue();
 
         // Velocity
-        inputs.leftVelocity = getLeftVelocity();
-        inputs.rightVelocity = getRightVelocity();
-
-        Logger.processInputs("DrivetrainTalonFXInputs", inputs);
+        inputs.leftVelocity = MetersPerSecond.of(flMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
+        inputs.rightVelocity = MetersPerSecond.of(frMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
     }
 
     @Override
-    public Current getLeftCurrent() {
-        return flMotor.getStatorCurrent().getValue().plus(blMotor.getStatorCurrent().getValue()).div(2);
+    public void setLeftVoltage(Voltage volts) {
+        flMotor.setControl(leftOpenLoop.withOutput(volts));
     }
 
     @Override
-    public Distance getLeftPosition() {
-        return Meters.of(flMotor.getPosition().getValue().in(Rotations) * DriveConstants.rotToMeters);
+    public void setRightVoltage(Voltage volts) {
+        frMotor.setControl(rightOpenLoop.withOutput(volts));
     }
 
     @Override
-    public Temperature getLeftTemperature() {
-        return flMotor.getDeviceTemp().getValue();
+    public void setLeftSpeed(LinearVelocity velocity) {
+        flMotor.setControl(leftClosedLoop.withVelocity(velocity.div(DriveConstants.wheelRadius).magnitude()));
     }
 
     @Override
-    public LinearVelocity getLeftVelocity() {
-        return MetersPerSecond.of(flMotor.getVelocity().getValue().in(RotationsPerSecond) * DriveConstants.rotToMeters);
-    }
-
-    @Override
-    public Voltage getLeftVoltage() {
-        return flMotor.getMotorVoltage().getValue();
-    }
-
-    @Override
-    public void setLeftVoltage(double volts) {
-        flMotor.setControl(new VoltageOut(volts));
-    }
-
-    @Override
-    public Current getRightCurrent() {
-        return frMotor.getStatorCurrent().getValue().plus(brMotor.getStatorCurrent().getValue()).div(2);
-    }
-
-    @Override
-    public Distance getRightPosition() {
-        return Meters.of(frMotor.getPosition().getValue().in(Rotations) * DriveConstants.rotToMeters);
-    }
-
-    @Override
-    public Temperature getRightTemperature() {
-        return frMotor.getDeviceTemp().getValue();
-    }
-
-    @Override
-    public LinearVelocity getRightVelocity() {
-        return MetersPerSecond.of(frMotor.getVelocity().getValue().in(RotationsPerSecond) * DriveConstants.rotToMeters);
-    }
-
-    @Override
-    public Voltage getRightVoltage() {
-        return frMotor.getMotorVoltage().getValue();
-    }
-
-    @Override
-    public void setRightVoltage(double volts) {
-        frMotor.setControl(new VoltageOut(volts));
+    public void setRightSpeed(LinearVelocity velocity) {
+        frMotor.setControl(rightClosedLoop.withVelocity(velocity.div(DriveConstants.wheelRadius).magnitude()));
     }
 }

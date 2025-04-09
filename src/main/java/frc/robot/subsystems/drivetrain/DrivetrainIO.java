@@ -1,5 +1,7 @@
 package frc.robot.subsystems.drivetrain;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -9,18 +11,18 @@ import org.littletonrobotics.junction.AutoLog;
 
 public interface DrivetrainIO {
     @AutoLog
-    public static class DrivetrainIOInputs {
-        public Current leftCurrent;
-        public Distance leftPosition;
-        public Temperature leftTemperature;
-        public LinearVelocity leftVelocity;
-        public Voltage leftVoltage;
+    public class DrivetrainIOInputs {
+        Current leftCurrent = Amps.zero();
+        Distance leftPosition = Meters.zero();
+        Temperature leftTemperature = Celsius.zero();
+        LinearVelocity leftVelocity = MetersPerSecond.zero();
+        Voltage leftVoltage = Volts.zero();
 
-        public Current rightCurrent;
-        public Distance rightPosition;
-        public Temperature rightTemperature;
-        public LinearVelocity rightVelocity;
-        public Voltage rightVoltage;
+        Current rightCurrent = Amps.zero();
+        Distance rightPosition = Meters.zero();
+        Temperature rightTemperature = Celsius.zero();
+        LinearVelocity rightVelocity = MetersPerSecond.zero();
+        Voltage rightVoltage = Volts.zero();
     }
 
     /** 
@@ -28,37 +30,17 @@ public interface DrivetrainIO {
      * 
      * @param inputs The inputs object to update.
      */
-    public void updateInputs();
+    public void updateInputs(DrivetrainIOInputs inputs);
 
-    /**
-     * Returns the current draw of the left side of the robot.
-     * 
-     * @return The current draw of the left side of the robot in Amps.
-     */
-    public Current getLeftCurrent();
+    /** Sets the voltage output of the left side of the robot. */
+    public void setLeftVoltage(Voltage volts);
 
-    /**
-     * Returns the distance that the left side of the robot has traveled.
-     * 
-     * @return The distance that the left side of the robot has traveled in meters.
-     */
-    public Distance getLeftPosition();
-    
-    public Temperature getLeftTemperature();
-    
-    public LinearVelocity getLeftVelocity();
+    /** Sets the voltage output of the right side of the robot. */
+    public void setRightVoltage(Voltage volts);
 
-    public Voltage getLeftVoltage();
-    public void setLeftVoltage(double volts);
+    /** Sets the velocity of the left side of the robot. */
+    public void setLeftSpeed(LinearVelocity velocity);
 
-    public Current getRightCurrent();
-    
-    public Distance getRightPosition();
-    
-    public Temperature getRightTemperature();
-
-    public LinearVelocity getRightVelocity();
-    
-    public Voltage getRightVoltage();
-    public void setRightVoltage(double volts);
+    /** Sets the velocity of the right side of the robot. */
+    public void setRightSpeed(LinearVelocity velocity);
 }
