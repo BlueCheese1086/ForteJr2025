@@ -45,10 +45,10 @@ public final class Constants {
         public static final Mass mass = Pounds.of(60);
 
         // Max speeds
-        public static final LinearVelocity maxClosedDriveSpeed = MetersPerSecond.of(3.5);
-        public static final LinearVelocity maxClosedTurnSpeed = maxClosedDriveSpeed.div(robotWidth.div(2).in(Meters));
-        public static final double maxOpenDriveSpeed = 1; // Percent
-        public static final double maxOpenTurnSpeed = 0.7; // Percent
+        public static final LinearVelocity maxDriveSpeed = MetersPerSecond.of(3.5);
+        public static final LinearVelocity maxSteerSpeed = maxDriveSpeed.div(robotWidth.div(2).in(Meters));
+        public static final double maxDrivePercent = 1; // Percent
+        public static final double maxSteerPercent = 0.7; // Percent
 
         // Conversion factors
         public static final double rotToMeters = wheelCircumference.in(Meters) / gearRatio;
@@ -66,10 +66,10 @@ public final class Constants {
 
     public static class ShooterConstants {
         // Max speeds
-        public static final AngularVelocity maxClosedFeedSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
-        public static final AngularVelocity maxClosedLaunchSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
-        public static final double maxOpenFeedSpeed = 1; // Percent
-        public static final double maxOpenLaunchSpeed = 1; // Percent
+        public static final AngularVelocity maxFeedSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
+        public static final AngularVelocity maxLaunchSpeed = Rotations.per(Minute).of(5676); // Rotations / Minute
+        public static final double maxFeedPercent = 1; // Percent
+        public static final double maxLaunchPercent = 1; // Percent
 
         // PIDFF values
         public static final double launchP  = 0.0;

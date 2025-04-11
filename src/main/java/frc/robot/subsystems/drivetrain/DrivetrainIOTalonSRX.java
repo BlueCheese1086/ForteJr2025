@@ -99,13 +99,13 @@ public class DrivetrainIOTalonSRX implements DrivetrainIO {
     public void setLeftSpeed(LinearVelocity velocity) {
         noClosedLoop.set(true);
         
-        flMotor.set(ControlMode.PercentOutput, velocity.div(DriveConstants.maxClosedDriveSpeed).magnitude());
+        flMotor.set(ControlMode.PercentOutput, velocity.div(DriveConstants.maxDriveSpeed).magnitude());
     }
 
     @Override
     public void setRightSpeed(LinearVelocity velocity) {
         noClosedLoop.set(true);
 
-        frMotor.set(ControlMode.PercentOutput, velocity.div(DriveConstants.maxClosedDriveSpeed).magnitude());
+        frMotor.set(ControlMode.PercentOutput, velocity.div(DriveConstants.maxDriveSpeed).magnitude());
     }
 }

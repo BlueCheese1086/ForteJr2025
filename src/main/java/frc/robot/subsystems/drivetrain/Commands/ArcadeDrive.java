@@ -41,8 +41,8 @@ public class ArcadeDrive extends Command {
         MathUtils.applyDeadbandWithOffsets(zRotat, Constants.deadband, 0.9);
 
         // Scaling for max speeds
-        xSpeed *= DriveConstants.maxOpenDriveSpeed;
-        zRotat *= DriveConstants.maxOpenTurnSpeed;
+        xSpeed *= DriveConstants.maxDrivePercent;
+        zRotat *= DriveConstants.maxSteerPercent;
 
         // Driving the robot
         drivetrain.arcadeDrive(xSpeed, zRotat);

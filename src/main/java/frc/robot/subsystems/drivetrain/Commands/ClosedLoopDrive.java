@@ -39,8 +39,8 @@ public class ClosedLoopDrive extends Command {
         double zRotat = MathUtils.applyDeadbandWithOffsets(zRotatSupplier.get(), Constants.deadband, 0.9);
 
         // Scaling for max speeds
-        xSpeed *= DriveConstants.maxClosedDriveSpeed.in(MetersPerSecond);
-        zRotat *= DriveConstants.maxClosedTurnSpeed.in(MetersPerSecond);
+        xSpeed *= DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+        zRotat *= DriveConstants.maxSteerSpeed.in(MetersPerSecond);
         
         // Driving the robot
         drivetrain.closedLoop(new ChassisSpeeds(xSpeed, 0, zRotat));

@@ -59,13 +59,13 @@ public class ShooterIOTalonSRX implements ShooterIO {
     public void setFeedSpeed(AngularVelocity speed) {
         noClosedLoop.set(true);
 
-        feed.set(ControlMode.PercentOutput, speed.div(ShooterConstants.maxClosedFeedSpeed).magnitude());
+        feed.set(ControlMode.PercentOutput, speed.div(ShooterConstants.maxFeedSpeed).magnitude());
     }
 
     @Override
     public void setLaunchSpeed(AngularVelocity speed) {
         noClosedLoop.set(true);
 
-        launch.set(ControlMode.PercentOutput, speed.div(ShooterConstants.maxClosedLaunchSpeed).magnitude());
+        launch.set(ControlMode.PercentOutput, speed.div(ShooterConstants.maxLaunchSpeed).magnitude());
     }
 }

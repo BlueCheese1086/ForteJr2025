@@ -37,8 +37,8 @@ public class TankDrive extends Command {
         double rSpeed = MathUtils.applyDeadbandWithOffsets(rSpeedSupplier.get(), Constants.deadband, 0.9);
 
         // Scaling for max speeds
-        lSpeed *= DriveConstants.maxOpenDriveSpeed;
-        rSpeed *= DriveConstants.maxOpenTurnSpeed;
+        lSpeed *= DriveConstants.maxDriveSpeed;
+        rSpeed *= DriveConstants.maxSteerSpeed;
 
         // Driving the robot
         drivetrain.tankDrive(lSpeed, rSpeed);

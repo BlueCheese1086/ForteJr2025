@@ -63,13 +63,13 @@ public class ShooterIOSim implements ShooterIO {
 
         // Updating inputs
         inputs.feedCurrent = Amps.of(feedMotor.getCurrentDrawAmps());
-        inputs.feedPercent = feedMotor.getAngularVelocityRPM() / ShooterConstants.maxClosedFeedSpeed.in(RPM);
+        inputs.feedPercent = feedMotor.getAngularVelocityRPM() / ShooterConstants.maxFeedSpeed.in(RPM);
         inputs.feedPosition = feedMotor.getAngularPosition();
         inputs.feedVelocity = feedMotor.getAngularVelocity();
         inputs.feedVoltage = Volts.of(feedMotor.getInputVoltage());
 
         inputs.launchCurrent = Amps.of(launchMotor.getCurrentDrawAmps());
-        inputs.launchPercent = launchMotor.getAngularVelocityRPM() / ShooterConstants.maxClosedLaunchSpeed.in(RPM);
+        inputs.launchPercent = launchMotor.getAngularVelocityRPM() / ShooterConstants.maxLaunchSpeed.in(RPM);
         inputs.launchPosition = launchMotor.getAngularPosition();
         inputs.launchVelocity = launchMotor.getAngularVelocity();
         inputs.launchVoltage = Volts.of(launchMotor.getInputVoltage());
