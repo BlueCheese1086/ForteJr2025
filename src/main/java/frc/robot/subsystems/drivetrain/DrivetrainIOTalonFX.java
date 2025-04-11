@@ -88,25 +88,35 @@ public class DrivetrainIOTalonFX implements DrivetrainIO {
         if (AdjustableValues.hasChanged("Drive_RightkFF")) rightClosedLoop.withFeedForward(AdjustableValues.getNumber("Drive_RightkFF"));
 
         // Updating inputs
-        // Voltages
-        inputs.leftVoltage = flMotor.getMotorVoltage().getValue();
-        inputs.rightVoltage = frMotor.getMotorVoltage().getValue();
-
-        // Positions
-        inputs.leftPosition = DriveConstants.wheelRadius.times(flMotor.getPosition().getValue().in(Radians));
-        inputs.rightPosition = DriveConstants.wheelRadius.times(frMotor.getPosition().getValue().in(Radians));
-
         // Current
-        inputs.leftCurrent = flMotor.getStatorCurrent().getValue();
-        inputs.rightCurrent = frMotor.getStatorCurrent().getValue();
+        inputs.flCurrent = flMotor.getStatorCurrent().getValue();
+        inputs.frCurrent = frMotor.getStatorCurrent().getValue();
+        inputs.blCurrent = blMotor.getStatorCurrent().getValue();
+        inputs.brCurrent = brMotor.getStatorCurrent().getValue();
 
+        // Position
+        inputs.flPosition = DriveConstants.wheelRadius.div(flMotor.getPosition().getValue().in(Radians));
+        inputs.frPosition = DriveConstants.wheelRadius.div(frMotor.getPosition().getValue().in(Radians));
+        inputs.blPosition = DriveConstants.wheelRadius.div(blMotor.getPosition().getValue().in(Radians));
+        inputs.brPosition = DriveConstants.wheelRadius.div(brMotor.getPosition().getValue().in(Radians));
+        
         // Temperature
-        inputs.leftTemperature = flMotor.getDeviceTemp().getValue();
-        inputs.rightTemperature = frMotor.getDeviceTemp().getValue();
+        inputs.flTemperature = flMotor.getDeviceTemp().getValue();
+        inputs.frTemperature = frMotor.getDeviceTemp().getValue();
+        inputs.blTemperature = blMotor.getDeviceTemp().getValue();
+        inputs.brTemperature = brMotor.getDeviceTemp().getValue();
 
         // Velocity
-        inputs.leftVelocity = MetersPerSecond.of(flMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
-        inputs.rightVelocity = MetersPerSecond.of(frMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
+        inputs.flVelocity = MetersPerSecond.of(flMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
+        inputs.frVelocity = MetersPerSecond.of(frMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
+        inputs.blVelocity = MetersPerSecond.of(blMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
+        inputs.brVelocity = MetersPerSecond.of(brMotor.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.wheelRadius.in(Meters));
+        
+        // Voltage
+        inputs.flVoltage = flMotor.getMotorVoltage().getValue();
+        inputs.frVoltage = frMotor.getMotorVoltage().getValue();
+        inputs.blVoltage = blMotor.getMotorVoltage().getValue();
+        inputs.brVoltage = brMotor.getMotorVoltage().getValue();
     }
 
     @Override

@@ -65,21 +65,21 @@ public class DrivetrainIOSim implements DrivetrainIO {
         driveSim.update(0.02);
 
         // Updating the inputs
-        // Voltages
-        inputs.leftVoltage = Volts.of(leftVolts);
-        inputs.rightVoltage = Volts.of(rightVolts);
-
-        // Positions
-        inputs.leftPosition = Meters.of(driveSim.getLeftPositionMeters());
-        inputs.rightPosition = Meters.of(driveSim.getRightPositionMeters());
-
         // Current
-        inputs.leftCurrent = Amps.of(driveSim.getLeftCurrentDrawAmps());
-        inputs.rightCurrent = Amps.of(driveSim.getRightCurrentDrawAmps());
+        inputs.flCurrent = Amps.of(driveSim.getLeftCurrentDrawAmps());
+        inputs.frCurrent = Amps.of(driveSim.getRightCurrentDrawAmps());
+
+        // Position
+        inputs.flPosition = Meters.of(driveSim.getLeftPositionMeters());
+        inputs.frPosition = Meters.of(driveSim.getRightPositionMeters());
 
         // Velocity
-        inputs.leftVelocity = MetersPerSecond.of(driveSim.getLeftVelocityMetersPerSecond());
-        inputs.rightVelocity = MetersPerSecond.of(driveSim.getRightVelocityMetersPerSecond());
+        inputs.flVelocity = MetersPerSecond.of(driveSim.getLeftVelocityMetersPerSecond());
+        inputs.frVelocity = MetersPerSecond.of(driveSim.getRightVelocityMetersPerSecond());
+
+        // Voltage
+        inputs.flVoltage = Volts.of(leftVolts);
+        inputs.frVoltage = Volts.of(rightVolts);
     }
 
     @Override

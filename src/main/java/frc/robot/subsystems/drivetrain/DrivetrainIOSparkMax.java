@@ -146,25 +146,35 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
         }
 
         // Updating inputs
-        // Voltages
-        inputs.leftVoltage = Volts.of(flMotor.getAppliedOutput() * flMotor.getBusVoltage());
-        inputs.rightVoltage = Volts.of(frMotor.getAppliedOutput() * frMotor.getBusVoltage());
-
-        // Positions
-        inputs.leftPosition = Meters.of(flEncoder.getPosition());
-        inputs.rightPosition = Meters.of(frEncoder.getPosition());
-
         // Current
-        inputs.leftCurrent = Amps.of(flMotor.getOutputCurrent());
-        inputs.rightCurrent = Amps.of(frMotor.getOutputCurrent());
+        inputs.flCurrent = Amps.of(flMotor.getOutputCurrent());
+        inputs.frCurrent = Amps.of(frMotor.getOutputCurrent());
+        inputs.blCurrent = Amps.of(blMotor.getOutputCurrent());
+        inputs.brCurrent = Amps.of(brMotor.getOutputCurrent());
+
+        // Position
+        inputs.flPosition = Meters.of(flEncoder.getPosition());
+        inputs.frPosition = Meters.of(frEncoder.getPosition());
+        inputs.blPosition = Meters.of(blEncoder.getPosition());
+        inputs.brPosition = Meters.of(brEncoder.getPosition());
 
         // Temperature
-        inputs.leftTemperature = Celsius.of(flMotor.getMotorTemperature());
-        inputs.rightTemperature = Celsius.of(frMotor.getMotorTemperature());
+        inputs.flTemperature = Celsius.of(flMotor.getMotorTemperature());
+        inputs.frTemperature = Celsius.of(frMotor.getMotorTemperature());
+        inputs.blTemperature = Celsius.of(blMotor.getMotorTemperature());
+        inputs.brTemperature = Celsius.of(brMotor.getMotorTemperature());
 
         // Velocity
-        inputs.leftVelocity = MetersPerSecond.of(flEncoder.getVelocity());
-        inputs.rightVelocity = MetersPerSecond.of(frEncoder.getVelocity());
+        inputs.flVelocity = MetersPerSecond.of(flEncoder.getVelocity());
+        inputs.frVelocity = MetersPerSecond.of(frEncoder.getVelocity());
+        inputs.blVelocity = MetersPerSecond.of(blEncoder.getVelocity());
+        inputs.brVelocity = MetersPerSecond.of(brEncoder.getVelocity());
+
+        // Voltage
+        inputs.flVoltage = Volts.of(flMotor.getAppliedOutput() * flMotor.getBusVoltage());
+        inputs.frVoltage = Volts.of(frMotor.getAppliedOutput() * frMotor.getBusVoltage());
+        inputs.blVoltage = Volts.of(blMotor.getAppliedOutput() * blMotor.getBusVoltage());
+        inputs.brVoltage = Volts.of(brMotor.getAppliedOutput() * brMotor.getBusVoltage());
     }
 
     @Override

@@ -62,17 +62,23 @@ public class DrivetrainIOTalonSRX implements DrivetrainIO {
     @Override
     public void updateInputs(DrivetrainIOInputs inputs) {
         // Updating IOInputs
-        // Voltages
-        inputs.leftVoltage = Volts.of((flMotor.getMotorOutputVoltage() + blMotor.getMotorOutputVoltage()) / 2.0);
-        inputs.rightVoltage = Volts.of((frMotor.getMotorOutputVoltage() + brMotor.getMotorOutputVoltage()) / 2.0);
-
         // Current
-        inputs.leftCurrent = Amps.of((flMotor.getStatorCurrent() + blMotor.getStatorCurrent()) / 2.0);
-        inputs.rightCurrent = Amps.of((frMotor.getStatorCurrent() + brMotor.getStatorCurrent()) / 2.0);
+        inputs.flCurrent = Amps.of(flMotor.getStatorCurrent());
+        inputs.frCurrent = Amps.of(frMotor.getStatorCurrent());
+        inputs.blCurrent = Amps.of(blMotor.getStatorCurrent());
+        inputs.brCurrent = Amps.of(brMotor.getStatorCurrent());
 
         // Temperature
-        inputs.leftTemperature = Celsius.of((flMotor.getTemperature() + blMotor.getTemperature()) / 2.0);
-        inputs.rightTemperature = Celsius.of((frMotor.getTemperature() + brMotor.getTemperature()) / 2.0);
+        inputs.flTemperature = Celsius.of(flMotor.getTemperature());
+        inputs.frTemperature = Celsius.of(frMotor.getTemperature());
+        inputs.blTemperature = Celsius.of(blMotor.getTemperature());
+        inputs.brTemperature = Celsius.of(brMotor.getTemperature());
+
+        // Voltage
+        inputs.flVoltage = Volts.of(flMotor.getMotorOutputVoltage());
+        inputs.frVoltage = Volts.of(frMotor.getMotorOutputVoltage());
+        inputs.blVoltage = Volts.of(blMotor.getMotorOutputVoltage());
+        inputs.brVoltage = Volts.of(brMotor.getMotorOutputVoltage());
     }
 
     @Override

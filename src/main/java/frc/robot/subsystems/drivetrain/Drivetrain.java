@@ -80,7 +80,7 @@ public class Drivetrain extends SubsystemBase {
         Logger.processInputs("/RealOutputs/Drivetrain", inputs);
 
         // Estimating heading from IO inputs
-        heading.plus(new Rotation2d(kinematics.toTwist2d(inputs.leftPosition.in(Meters), inputs.rightPosition.in(Meters)).dtheta));
+        heading.plus(new Rotation2d(kinematics.toTwist2d(inputs.flPosition.in(Meters), inputs.frPosition.in(Meters)).dtheta));
 
         poseEstimator.update(getAngle(), getPosition());
     }
@@ -110,19 +110,19 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public Distance getLeftPosition() {
-        return inputs.leftPosition;
+        return inputs.flPosition;
     }
 
     public LinearVelocity getLeftVelocity() {
-        return inputs.leftVelocity;
+        return inputs.flVelocity;
     }
 
     public Distance getRightPosition() {
-        return inputs.rightPosition;
+        return inputs.frPosition;
     }
 
     public LinearVelocity getRightVelocity() {
-        return inputs.rightVelocity;
+        return inputs.frVelocity;
     }
 
     public void arcadeDrive(double xSpeed, double zRotate) {

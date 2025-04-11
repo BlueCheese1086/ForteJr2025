@@ -12,17 +12,30 @@ import org.littletonrobotics.junction.AutoLog;
 public interface DrivetrainIO {
     @AutoLog
     public class DrivetrainIOInputs {
-        Current leftCurrent = Amps.zero();
-        Distance leftPosition = Meters.zero();
-        Temperature leftTemperature = Celsius.zero();
-        LinearVelocity leftVelocity = MetersPerSecond.zero();
-        Voltage leftVoltage = Volts.zero();
+        Current flCurrent = Amps.zero();
+        Current frCurrent = Amps.zero();
+        Current blCurrent = Amps.zero();
+        Current brCurrent = Amps.zero();
 
-        Current rightCurrent = Amps.zero();
-        Distance rightPosition = Meters.zero();
-        Temperature rightTemperature = Celsius.zero();
-        LinearVelocity rightVelocity = MetersPerSecond.zero();
-        Voltage rightVoltage = Volts.zero();
+        Distance flPosition = Meters.zero();
+        Distance frPosition = Meters.zero();
+        Distance blPosition = Meters.zero();
+        Distance brPosition = Meters.zero();
+
+        Temperature flTemperature = Celsius.zero();
+        Temperature frTemperature = Celsius.zero();
+        Temperature blTemperature = Celsius.zero();
+        Temperature brTemperature = Celsius.zero();
+
+        LinearVelocity flVelocity = MetersPerSecond.zero();
+        LinearVelocity frVelocity = MetersPerSecond.zero();
+        LinearVelocity blVelocity = MetersPerSecond.zero();
+        LinearVelocity brVelocity = MetersPerSecond.zero();
+
+        Voltage flVoltage = Volts.zero();
+        Voltage frVoltage = Volts.zero();
+        Voltage blVoltage = Volts.zero();
+        Voltage brVoltage = Volts.zero();
     }
 
     /** 
