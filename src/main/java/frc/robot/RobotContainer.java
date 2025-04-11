@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.RobotMap;
@@ -14,7 +13,7 @@ import frc.robot.subsystems.shooter.Commands.*;
 
 public class RobotContainer {
     // Replace with CommandPS4Controller or CommandJoystick if needed
-    private CommandJoystick controller = new CommandJoystick(0);
+    private CommandXboxController controller = new CommandXboxController(0);
 
     // Subsystems
     private Drivetrain drivetrain;
@@ -45,11 +44,11 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        drivetrain.setDefaultCommand(new ArcadeDrive(drivetrain, controller::getY, controller::getZ));
+        drivetrain.setDefaultCommand(new ArcadeDrive(drivetrain, controller::getLeftY, controller::getRightX));
 
-        controller.button(1).whileTrue(new SetFeedPercent(shooter, 1));
-        controller.button(3).whileTrue(new SetLaunchPercent(shooter, -1)).whileTrue(new SetFeedPercent(shooter, -1));
-        controller.button(2).toggleOnTrue(new SetLaunchPercent(shooter, 1));
+        controller.a().whileTrue(new SetFeedPercent(shooter, 1));
+        controller.b().whileTrue(new SetLaunchPercent(shooter, -1)).whileTrue(new SetFeedPercent(shooter, -1));
+        controller.y().toggleOnTrue(new SetLaunchPercent(shooter, 1));
     }
 
     /**
