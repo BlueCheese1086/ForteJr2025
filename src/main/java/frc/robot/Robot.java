@@ -37,6 +37,11 @@ public class Robot extends LoggedRobot {
         // Instantiate the RobotContainer.  This will assign all our button bindings.
         robotContainer = new RobotContainer();
 
+        AdjustableValues.registerNumber("Drive_Percent", "/Adjustables/Speeds/Drive_Percent", DriveConstants.maxDrivePercent);
+        AdjustableValues.registerNumber("Steer_Percent", "/Adjustables/Speeds/Steer_Percent", DriveConstants.maxSteerPercent);
+        AdjustableValues.registerNumber("Launch_Percent", "/Adjustables/Speeds/Launch_Percent", ShooterConstants.maxLaunchPercent);
+        AdjustableValues.registerNumber("Feed_Percent", "/Adjustables/Speeds/Feed_Percent", ShooterConstants.maxFeedPercent);
+
         AdjustableValues.registerNumber("Drive_kP", "/Adjustables/Drive/kP", DriveConstants.kP, "Drive_LeftkP", "Drive_RightkP");
         AdjustableValues.registerNumber("Drive_kI", "/Adjustables/Drive/kI", DriveConstants.kI, "Drive_LeftkI", "Drive_RightkI");
         AdjustableValues.registerNumber("Drive_kD", "/Adjustables/Drive/kD", DriveConstants.kD, "Drive_LeftkD", "Drive_RightkD");

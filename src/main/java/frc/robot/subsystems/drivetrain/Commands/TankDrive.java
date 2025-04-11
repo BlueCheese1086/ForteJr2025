@@ -2,8 +2,8 @@ package frc.robot.subsystems.drivetrain.Commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.drivetrain.Drivetrain;
+import frc.robot.util.AdjustableValues;
 import frc.robot.util.MathUtils;
 import java.util.function.Supplier;
 
@@ -37,8 +37,8 @@ public class TankDrive extends Command {
         double rSpeed = MathUtils.applyDeadbandWithOffsets(rSpeedSupplier.get(), Constants.deadband, 0.9);
 
         // Scaling for max speeds
-        lSpeed *= DriveConstants.maxDriveSpeed;
-        rSpeed *= DriveConstants.maxSteerSpeed;
+        lSpeed *= AdjustableValues.getNumber("Drive_Percent");
+        rSpeed *= AdjustableValues.getNumber("Drive_Percent");
 
         // Driving the robot
         drivetrain.tankDrive(lSpeed, rSpeed);

@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter.Commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.util.AdjustableValues;
 
 public class SetLaunchPercent extends Command {
     private Shooter shooter;
@@ -14,7 +15,7 @@ public class SetLaunchPercent extends Command {
 
     @Override
     public void execute() {
-        shooter.setLaunchPercent(speed);
+        shooter.setLaunchPercent(speed * AdjustableValues.getNumber("Launch_Percent"));
     }
 
     @Override
