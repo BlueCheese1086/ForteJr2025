@@ -23,9 +23,14 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
 
     private RelativeEncoder flEncoder;
     private RelativeEncoder frEncoder;
+    private RelativeEncoder blEncoder;
+    private RelativeEncoder brEncoder;
 
     private SparkClosedLoopController flController;
     private SparkClosedLoopController frController;
+
+    private SparkMaxConfig leftConfig = new SparkMaxConfig();
+    private SparkMaxConfig rightConfig = new SparkMaxConfig();
 
     public DrivetrainIOSparkMax(int frontLeftID, int frontRightID, int backLeftID, int backRightID) {
         // Initializing the motors
@@ -34,30 +39,32 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
         blMotor = new SparkMax(backLeftID,   MotorType.kBrushless);
         brMotor = new SparkMax(backRightID,  MotorType.kBrushless);
 
-        // Making the config object
-        SparkMaxConfig config = new SparkMaxConfig();
+        // Adjusting the config objects
+        leftConfig.idleMode(IdleMode.kBrake);
+        leftConfig.inverted(true);
+        leftConfig.closedLoop.p(AdjustableValues.getNumber("Drive_LeftkP"));
+        leftConfig.closedLoop.i(AdjustableValues.getNumber("Drive_LeftkI"));
+        leftConfig.closedLoop.d(AdjustableValues.getNumber("Drive_LeftkD"));
+        leftConfig.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_LeftkFF"));
+        flMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
-        config.idleMode(IdleMode.kBrake);
-        config.closedLoop.p(AdjustableValues.getNumber("Drive_kP"));
-        config.closedLoop.i(AdjustableValues.getNumber("Drive_kI"));
-        config.closedLoop.d(AdjustableValues.getNumber("Drive_kD"));
-        config.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_kFF"));
+        leftConfig.follow(flMotor);
+        blMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
-        frMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        leftConfig.disableFollowerMode();
+
+        rightConfig.idleMode(IdleMode.kBrake);
+        rightConfig.closedLoop.p(AdjustableValues.getNumber("Drive_RightkP"));
+        rightConfig.closedLoop.i(AdjustableValues.getNumber("Drive_RightkI"));
+        rightConfig.closedLoop.d(AdjustableValues.getNumber("Drive_RightkD"));
+        rightConfig.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_RightkFF"));
+        frMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+
+        rightConfig.follow(frMotor);
+        brMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         
-        config.follow(frMotor);
+        rightConfig.disableFollowerMode();
         
-        brMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        config.disableFollowerMode();
-        config.inverted(true);
-
-        flMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        config.follow(flMotor);
-
-        blMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
         // Getting the encoder for each motor
         flEncoder = flMotor.getEncoder();
         frEncoder = frMotor.getEncoder();
@@ -70,19 +77,73 @@ public class DrivetrainIOSparkMax implements DrivetrainIO {
     @Override
     public void updateInputs(DrivetrainIOInputs inputs) {
         // Updating PID values
-        SparkMaxConfig config = new SparkMaxConfig();
-        if (AdjustableValues.hasChanged("Drive_LeftkP")) config.closedLoop.p(AdjustableValues.getNumber("Drive_LeftkP"));
-        if (AdjustableValues.hasChanged("Drive_LeftkI")) config.closedLoop.i(AdjustableValues.getNumber("Drive_LeftkI"));
-        if (AdjustableValues.hasChanged("Drive_LeftkD")) config.closedLoop.d(AdjustableValues.getNumber("Drive_LeftkD"));
-        if (AdjustableValues.hasChanged("Drive_LeftkFF")) config.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_LeftkFF"));
-        if (!config.equals(new SparkMaxConfig())) flMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        boolean changed = false;
 
-        config = new SparkMaxConfig();
-        if (AdjustableValues.hasChanged("Drive_RightkP")) config.closedLoop.p(AdjustableValues.getNumber("Drive_RightkP"));
-        if (AdjustableValues.hasChanged("Drive_RightkI")) config.closedLoop.i(AdjustableValues.getNumber("Drive_RightkI"));
-        if (AdjustableValues.hasChanged("Drive_RightkD")) config.closedLoop.d(AdjustableValues.getNumber("Drive_RightkD"));
-        if (AdjustableValues.hasChanged("Drive_RightkFF")) config.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_RightkFF"));
-        if (!config.equals(new SparkMaxConfig())) frMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        if (AdjustableValues.hasChanged("Drive_LeftkP")) {
+            leftConfig.closedLoop.p(AdjustableValues.getNumber("Drive_LeftkP"));
+
+            changed = true;
+        }
+
+        if (AdjustableValues.hasChanged("Drive_LeftkI")) {
+            leftConfig.closedLoop.i(AdjustableValues.getNumber("Drive_LeftkI"));
+
+            changed = true;
+        }
+
+        if (AdjustableValues.hasChanged("Drive_LeftkD")) {
+            leftConfig.closedLoop.d(AdjustableValues.getNumber("Drive_LeftkD"));
+
+            changed = true;
+        }
+
+        if (AdjustableValues.hasChanged("Drive_LeftkFF")) {
+            leftConfig.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_LeftkFF"));
+
+            changed = true;
+        }
+
+        if (changed) {
+            flMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+            leftConfig.follow(flMotor);
+            blMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+            leftConfig.disableFollowerMode();
+        }
+
+        changed = false;
+
+        if (AdjustableValues.hasChanged("Drive_RightkP")) {
+            rightConfig.closedLoop.p(AdjustableValues.getNumber("Drive_RightkP"));
+
+            changed = true;
+        }
+
+        if (AdjustableValues.hasChanged("Drive_RightkI")) {
+            rightConfig.closedLoop.i(AdjustableValues.getNumber("Drive_RightkI"));
+
+            changed = true;
+        }
+
+        if (AdjustableValues.hasChanged("Drive_RightkD")) {
+            rightConfig.closedLoop.d(AdjustableValues.getNumber("Drive_RightkD"));
+
+            changed = true;
+        }
+
+        if (AdjustableValues.hasChanged("Drive_RightkFF")) {
+            rightConfig.closedLoop.velocityFF(AdjustableValues.getNumber("Drive_RightkFF"));
+
+            changed = true;
+        }
+
+        if (changed) {
+            frMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+            
+            rightConfig.follow(frMotor);
+            brMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+            rightConfig.disableFollowerMode();
+        }
 
         // Updating inputs
         // Voltages

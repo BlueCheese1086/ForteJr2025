@@ -57,19 +57,57 @@ public class ShooterIOSparkMax implements ShooterIO {
     @Override
     public void updateInputs(ShooterIOInputs inputs) {
         // Updating PID values
-        SparkMaxConfig config = new SparkMaxConfig();
-        if (AdjustableValues.hasChanged("Feed_kP")) config.closedLoop.p(AdjustableValues.getNumber("Feed_kP"));
-        if (AdjustableValues.hasChanged("Feed_kI")) config.closedLoop.i(AdjustableValues.getNumber("Feed_kI"));
-        if (AdjustableValues.hasChanged("Feed_kD")) config.closedLoop.d(AdjustableValues.getNumber("Feed_kD"));
-        if (AdjustableValues.hasChanged("Feed_kFF")) config.closedLoop.velocityFF(AdjustableValues.getNumber("Feed_kFF"));
-        if (!config.equals(new SparkMaxConfig())) feedMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        boolean changed = false;
 
-        config = new SparkMaxConfig();
-        if (AdjustableValues.hasChanged("Launch_kP")) config.closedLoop.p(AdjustableValues.getNumber("Launch_kP"));
-        if (AdjustableValues.hasChanged("Launch_kI")) config.closedLoop.i(AdjustableValues.getNumber("Launch_kI"));
-        if (AdjustableValues.hasChanged("Launch_kD")) config.closedLoop.d(AdjustableValues.getNumber("Launch_kD"));
-        if (AdjustableValues.hasChanged("Launch_kFF")) config.closedLoop.velocityFF(AdjustableValues.getNumber("Launch_kFF"));
-        if (!config.equals(new SparkMaxConfig())) launchMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        SparkMaxConfig feedConfig = new SparkMaxConfig();
+        if (AdjustableValues.hasChanged("Feed_kP")) {
+            feedConfig.closedLoop.p(AdjustableValues.getNumber("Feed_kP"));
+            changed = true;
+        }
+        
+        if (AdjustableValues.hasChanged("Feed_kI")) {
+            feedConfig.closedLoop.i(AdjustableValues.getNumber("Feed_kI"));
+            changed = true;
+        }
+        
+        if (AdjustableValues.hasChanged("Feed_kD")) {
+            feedConfig.closedLoop.d(AdjustableValues.getNumber("Feed_kD"));
+            changed = true;
+        }
+
+        if (AdjustableValues.hasChanged("Feed_kFF")) {
+            feedConfig.closedLoop.velocityFF(AdjustableValues.getNumber("Feed_kFF"));
+            changed = true;
+        }
+
+        // Applying new feed config
+        if (changed) feedMotor.configure(feedConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        changed = false;
+
+        SparkMaxConfig launchConfig = new SparkMaxConfig();
+        if (AdjustableValues.hasChanged("Launch_kP")) {
+            launchConfig.closedLoop.p(AdjustableValues.getNumber("Launch_kP"));
+            changed = true;
+        }
+        
+        if (AdjustableValues.hasChanged("Launch_kI")) {
+            launchConfig.closedLoop.i(AdjustableValues.getNumber("Launch_kI"));
+            changed = true;
+        }
+        
+        if (AdjustableValues.hasChanged("Launch_kD")) {
+            launchConfig.closedLoop.d(AdjustableValues.getNumber("Launch_kD"));
+            changed = true;
+        }
+        
+        if (AdjustableValues.hasChanged("Launch_kFF")) {
+            launchConfig.closedLoop.velocityFF(AdjustableValues.getNumber("Launch_kFF"));
+            changed = true;
+        }
+
+        // Applying new launch config
+        if (changed) launchMotor.configure(launchConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // Updating inputs
         inputs.feedCurrent = Amps.of(feedMotor.getOutputCurrent());
